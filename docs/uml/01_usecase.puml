@@ -1,0 +1,45 @@
+@startuml TantsahaConnect_CasDUtilisation
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F5F7FA
+  BorderColor #2E7D32
+  ArrowColor #2E7D32
+}
+skinparam defaultFontName Segoe UI
+
+actor "Paysan\n(CP1, CP2)" as U
+actor "Système météo\n(données SMS/offline)" as Meteo
+actor "Serveur de contenu\n(conseils, calendrier)" as Serveur
+
+rectangle "Tantsaha Connect" {
+  usecase "Consulter les prévisions météo locales" as UC1
+  usecase "Recevoir alerte de semis / récolte" as UC2
+  usecase "Saisir une observation\n(pluie, ravageur, date de plantation)" as UC3
+  usecase "Consulter un conseil agricole" as UC4
+  usecase "Écouter le message en malagasy (audio)" as UC5
+  usecase "Rechercher une parcelle / culture" as UC6
+  usecase "Synchroniser les données\n(quand internet dispo)" as UC7
+  usecase "Choisir la langue / mode accessible" as UC8
+}
+
+' ---- Inclusions / extensions ----
+UC1 ..> UC5 : <<extend>> (bouton haut-parleur)
+UC3 ..> UC5 : <<extend>> (confirmation vocale)
+UC2 ..> UC1 : <<extend>> (taper sur l'alerte)
+UC4 ..> UC5 : <<extend>> (conseil audio)
+UC6 .> UC3 : <<include>> (contexte de saisie)
+
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC6
+U --> UC8
+U ..> UC7 : <<extend>> (WiFi détecté)
+
+Meteo --> UC1 : fournisseur de données
+Serveur --> UC4 : contenus hors-ligne\n(téléchargés à l'avance)
+
+@enduml

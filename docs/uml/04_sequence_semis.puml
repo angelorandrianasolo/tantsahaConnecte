@@ -1,0 +1,75 @@
+@startuml TantsahaConnect_Scenario2_Semis
+title Scénario 2 — Saisir une date de plantation (observation)
+
+skinparam sequence {
+  ArrowColor #2E7D32
+  ActorBorderColor #2E7D32
+  LifeLineBorderColor #2E7D32
+  ParticipantBorderColor #2E7D32
+  ParticipantBackgroundColor #F5F7FA
+}
+skinparam defaultFontName Segoe UI
+
+actor "Voahangy\n(jardinière)" as U
+participant "Écran\nJournal" as J
+participant "Écran\nSaisie" as S
+participant "Contrôleur\nObservation" as C
+database "Base\nlocale" as B
+participant "Service\nAudio" as Voix
+participant "Synchroni-\nsateur" as Y
+
+U -> J : tape "Journal de culture"
+activate J
+J -> B : historique(parcelle)
+B --> J : observations existantes
+J --> U : timeline visuelle 🌱 🐛 💧\n+ gros bouton "+"
+
+U -> J : tape "+"
+J -> S : afficher(TypeObservation)
+activate S
+S --> U : 4 grandes icônes :\n🌱 Semis · 💧 Pluie · 🐛 Ravageur · 🌾 Récolte
+note right of S
+  Reconnaissance plutôt que rappel :
+  choix par pictogrammes, pas de
+  saisie de type en texte libre
+end note
+
+U -> S : choisit 🌱 (Semis)
+S --> U : écran suivant — date pré-remplie\naujourd'hui (15/01) + bouton "Manomboka"
+U -> S : tape le picto date (calendrier simplifié)
+S --> U : confirmation visuelle (☑ + vibration)
+U -> S : tape "Hitantana" (Valider)
+
+S -> C : creerObservation(type=PLANTATION, date=15/01)
+activate C
+C -> C : validation : date <= aujourd'hui ?
+alt données valides
+  C -> B : INSERT observation (stockage local)
+  B --> C : OK
+  C -> Voix : confirmer("Voafitra ny 15 Janaro")
+  Voix --> U : annonce vocale en malagasy
+  C --> S : succès
+  S --> U : écran "✅ Voaitsiky" + retour au Journal
+else date invalide
+  C --> S : erreur
+  S --> U : picto ⚠️ rouge + message court + 🔊
+  note right of S
+    Rouge = danger / interdiction
+    (convention culturelle respectée)
+  end note
+end
+deactivate C
+
+S -> J : rafraîchir timeline
+J --> U : nouvelle graine 🌱 apparaît
+deactivate S
+
+par Lorsque le réseau est disponible
+  Y -> B : lire file d'attente sync
+  Y -> Y : PUT vers serveur (batch)
+  Y -> B : marquer synchronisé
+else Toujours hors ligne
+  note over Y : file d'attente conservée,\nrelance automatique ultérieure
+end
+deactivate J
+@enduml

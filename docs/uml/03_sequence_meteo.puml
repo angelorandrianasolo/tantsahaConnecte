@@ -1,0 +1,54 @@
+@startuml TantsahaConnect_Scenario1_Meteo
+title Scénario 1 — Consulter la météo avant de semer (hors ligne)
+
+skinparam sequence {
+  ArrowColor #2E7D32
+  ActorBorderColor #2E7D32
+  LifeLineBorderColor #2E7D32
+  ParticipantBorderColor #2E7D32
+  ParticipantBackgroundColor #F5F7FA
+}
+skinparam defaultFontName Segoe UI
+
+actor "Rakoto\n(paysan)" as U
+participant "Écran\nAccueil" as A
+participant "Service\nMétéo" as M
+participant "Base\nlocale" as B
+participant "Service\nAudio" as Voix
+database "Cache\noffline" as C
+
+U -> A : ouvre l'application
+activate A
+A -> B : chargerEtatDuJour()
+B -> C : SELECT prévisions
+C --> B : prévisions du 12/03
+B --> A : données + horodatage "maj 06:00"
+A --> U : affiche grand picto ☁️ + "Tsy hoana fambolena"\n+ bandeau "Hors ligne — données locales"
+
+note right of A
+  Critère Nielsen :
+  Visibilité de l'état du système
+  (état hors-ligne et date de maj affichés)
+end note
+
+U -> A : tape "Météo"
+A -> M : previsionsSur3Jours(region)
+M -> C : lecture cache
+C --> M : J1, J2, J3
+M --> A : liste PrévisionMeteo
+A --> U : 3 jours = picto + % pluie + températures\n(bouton 🔊 par jour)
+
+note over A,C
+  Pas d'appel réseau : l'application
+  fonctionne intégralement hors ligne
+end note
+
+U -> A : tape 🔊 (J1)
+A -> Voix : lire(texteMG)
+Voix -> C : charger fichier MP3 local
+C --> Voix : J1.mp3
+Voix --> U : élocution malagasy :\n"Tokony hamono ny hatsy amin'ny herinandro ity"
+
+U -> A : revient à l'accueil
+deactivate A
+@enduml

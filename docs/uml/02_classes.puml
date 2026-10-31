@@ -1,0 +1,172 @@
+@startuml TantsahaConnect_Classes
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #F5F7FA
+  BorderColor #2E7D32
+  ArrowColor #2E7D32
+}
+skinparam defaultFontName Segoe UI
+skinparam packageStyle frame
+
+package "Domaine métier" {
+  class Utilisateur {
+    + id : Id
+    + nom : String
+    + langue : Langue {FR, MG}
+    + niveauAlphabetisation : Niveau
+    + modeAudioActif : Boolean
+    --
+    + ecouter(message) : Audio
+    + estConnecte() : Boolean
+  }
+
+  class Parcelle {
+    + id : Id
+    + nomLocal : String
+    + superficieHa : Real
+    + region : String
+    --
+    + ajouterObservation(o) : void
+    + historique() : Liste<Observation>
+  }
+
+  abstract class Culture {
+    + nomMalagasy : String
+    + nomScientifique : String
+    + dureeCycleJours : Integer
+    + pictogramme : Pictogramme
+    --
+    + dateSemisConseillee(date) : Période
+    + dateRecolteEstimee(date) : Date
+  }
+
+  class Riz ..|> Culture
+  class Mais ..|> Culture
+  class Legume ..|> Culture
+  class Manioc ..|> Culture
+
+  class Observation {
+    + id : Id
+    + dateSaisie : Date
+    + type : TypeObservation
+    + valeur : String
+    + coordGPS : Coordonnee?
+    + source : SaisieManuelle | ImportSMS
+    --
+    + valider() : void
+  }
+  enum TypeObservation {
+    PLUIE
+    RAVAGEUR
+    PLANTATION
+    RECOLTE
+    MALADIE
+  }
+
+  class CalendrierAgricole {
+    + annee : Integer
+    + region : String
+    --
+    + periodesDeSemis(culture) : Liste<Periode>
+    + alertesJour(date) : Liste<Alerte>
+  }
+
+  class PrevisionMeteo {
+    + date : Date
+    + icone : Pictogramme
+    + probaPluie : Percent
+    + temperatureMax : Real
+    + temperatureMin : Real
+    + sourceMaj : Date
+    --
+    + estFavorableSemis() : Boolean
+    + resumeVocal() : Audio
+  }
+
+  class Alerte {
+    + id : Id
+    + type : TypeAlerte {SEMIS, RECOLTE, RAVAGEUR, METEO}
+    + priorite : Priorite {NORMALE, URGENTE}
+    + dateCreation : Date
+    + lue : Boolean
+    --
+    + afficher() : EcranAlerte
+    + annoncerVocalement() : Audio
+  }
+
+  class Conseil {
+    + id : Id
+    + theme : Theme {PARASITES, IRRIGATION, SEMIS}
+    + titreMalagasy : String
+    + contenuCourt : String
+    + fichierAudio : FichierAudio?
+    + icone : Pictogramme
+    --
+    + lire() : Texte
+    + ecouter() : Audio
+  }
+
+  class Pictogramme {
+    + code : String
+    + fichier : Image
+    + legendeMG : String
+    --
+    + couleurConvention() : Couleur
+  }
+}
+
+package "Infrastructure" {
+  class BaseLocale {
+    + chemin : String
+    --
+    + sauvegarder(entite) : void
+    + lire(critere) : Liste
+  }
+
+  class Synchronisateur {
+    + dernierSynchro : Date
+    --
+    + synchroniser() : Résultat
+    + estReseauDisponible() : Boolean
+  }
+
+  class ServiceAudio {
+    --
+    + genererAudio(texteMG) : FichierAudio
+    + lireFichier(fichier) : void
+  }
+
+  class FichierAudio {
+    + dureeSec : Real
+    + langue : Langue
+  }
+}
+
+' ---- Relations ----
+Utilisateur "1" *-- "0..*" Parcelle : possède >
+Parcelle "1" *-- "0..*" Observation : contient >
+Parcelle "1" --> "1..*" Culture : cultivée avec >
+Culture <|-- Riz
+Culture <|-- Mais
+Culture <|-- Legume
+Culture <|-- Manioc
+
+Observation --> TypeObservation
+Utilisateur --> Alerte : reçoit >
+CalendrierAgricole --> Alerte : génère >
+CalendrierAgricole --> Culture : dépend de >
+PrevisionMeteo --> Pictogramme : illustrée par >
+Alerte --> Pictogramme
+Conseil --> Pictogramme
+Conseil --> FichierAudio : version vocale >
+Utilisateur --> ServiceAudio : utilise >
+ServiceAudio --> FichierAudio : produit >
+
+BaseLocale o-- Observation
+BaseLocale o-- PrevisionMeteo
+BaseLocale o-- Conseil
+BaseLocale o-- Alerte
+Synchronisateur --> BaseLocale : vide / remplit >
+Synchronisateur --> PrevisionMeteo : met à jour >
+
+@enduml
