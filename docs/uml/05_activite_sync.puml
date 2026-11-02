@@ -1,0 +1,45 @@
+@startuml TantsahaConnect_Activite_Synchronisation
+title Activité — Synchronisation hors-ligne (store & forward)
+
+skinparam activity {
+  BackgroundColor #F5F7FA
+  BorderColor #2E7D32
+  ArrowColor #2E7D32
+  StartColor #2E7D32
+  EndColor #2E7D32
+}
+skinparam defaultFontName Segoe UI
+
+start
+:Ouverture de l'application;
+if (Réseau disponible ?) then (non)
+  :Mode HORS LIGNE;
+  note right
+    Bandeau visible en permanence :
+    "Tsy misy internet — data ampy local"
+    (visibilité de l'état du système)
+  end note
+  :Afficher données du cache local
+  (météo, alertes, conseils, journal);
+  :L'utilisateur saisit des observations;
+  :Tout est écrit dans la BASE LOCALE
+  + file d'attente de synchronisation;
+  note right
+    Aucune saisie n'est perdue :
+    l'utilisateur travaille toujours
+    en local, l'interface ne bloque jamais.
+  end note
+else (oui)
+  :Mode EN LIGNE;
+  :Vider la file d'attente
+  (POST /observations, batch);
+  :Télécharger les mises à jour
+  (prévisions 7 j, alertes du calendrier,
+  nouveaux conseils audio);
+  :Mettre à jour le caché + horodatage;
+  :Marquer "maj 06:00" dans le bandeau;
+endif
+:Restitution de l'information :
+pictogramme + texte court + audio malagasy;
+stop
+@enduml

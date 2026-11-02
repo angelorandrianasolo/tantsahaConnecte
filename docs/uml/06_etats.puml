@@ -1,0 +1,51 @@
+@startuml TantsahaConnect_Etats_Observation
+title Diagramme d'états — Cycle de vie d'une Observation et d'une Alerte
+
+skinparam state {
+  BackgroundColor #F5F7FA
+  BorderColor #2E7D32
+  ArrowColor #2E7D32
+}
+skinparam defaultFontName Segoe UI
+
+[*] --> Brouillon : l'utilisateur tape "+"
+
+state "Brouillon" as Brouillon : type choisi (🌱 💧 🐛 🌾)\ndate pré-remplie aujourd'hui
+
+state "En attente de validation" as AV : contrôle : date <= aujourd'hui ?
+Brouillon --> AV : confirmer
+
+state "Erreur de saisie" as KO : picto ⚠️ rouge + message court + 🔊
+AV --> KO : date invalide
+KO --> Brouillon : corriger
+
+state "Enregistrée localement" as LOCAL : INSERT en base locale\n✅ + vibration + voix malagasy
+
+state "En file de sync" as FILE : (si hors ligne)
+state "Synchronisée" as SYNC : confirmée au serveur
+state "Conflit / échec" as FAIL : nouvelle tentative automatique
+
+AV --> LOCAL : date valide
+LOCAL --> FILE : pas de réseau
+LOCAL --> SYNC : réseau disponible (batch)
+FILE --> SYNC : WiFi / 2G détecté
+FILE --> FAIL : émission échouée
+FAIL --> FILE : retry + backoff
+SYNC --> [*] : apparaît dans la timeline 🌱
+
+' ------- État des alertes (vue complémentaire) -------
+
+state "Alerte : NON LUE" as AL0 : notification : picto + bandeau couleur\n+ annonce vocale
+state "Alerte : LUE" as AL1 : détail affiché, action guidée :\n"Semer dans 3 jours"
+state "Alerte : TRAITÉE" as AL2 : l'utilisateur confirme\n"Hitantana" (j'ai agi) ou "Adino" (ignorer)
+state "Alerte : EXPIRÉE" as AL3 : date passée → archivée en gris
+
+[*] --> AL0 : génération (calendrier / météo / ravageur)
+AL0 --> AL1 : tap
+AL1 --> AL2 : action / report
+AL2 --> AL3 : fin de période
+note bottom of AL0
+  Priorité NORMALE = jaune
+  Priorité URGENTE = rouge (danger / interdiction)
+end note
+@enduml

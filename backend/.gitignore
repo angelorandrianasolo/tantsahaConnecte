@@ -1,0 +1,16 @@
+# Dépendances Node.js
+node_modules/
+backend/node_modules/
+
+# Fichiers de logs
+*.log
+backend/srv.err
+backend/srv.log
+
+# Variables d'environnement
+.env
+.env.*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
