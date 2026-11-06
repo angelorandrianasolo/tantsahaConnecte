@@ -12,6 +12,7 @@ app.use('/alertes', require('./routes/alerte.routes'));
 app.use('/meteo', require('./routes/meteo.routes'));
 app.use('/conseils', require('./routes/conseil.routes'));
 app.use('/sync', require('./routes/sync.routes'));
+app.use('/dashboard', require('./routes/dashboard.routes'));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
