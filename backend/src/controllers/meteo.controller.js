@@ -2,7 +2,7 @@ const MeteoService = require('../services/meteo.service');
 
 // Contrôleur (couche HTTP) — météo
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' });
+  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
 });
 
 const MeteoController = {
@@ -36,6 +36,13 @@ const MeteoController = {
 
   icones: wrap(async (req, res) => {
     res.json(MeteoService.ICONES);
+  }),
+
+  actualiser: wrap(async (req, res) => {
+    res.json(await MeteoService.actualiser(
+      req.body ? req.body.latitude : null,
+      req.body ? req.body.longitude : null
+    ));
   }),
 };
 

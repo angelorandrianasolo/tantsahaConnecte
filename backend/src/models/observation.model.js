@@ -4,7 +4,7 @@ const pool = require('../config/db');
 const ObservationModel = {
   findAll: async () => {
     const { rows } = await pool.query(
-      `SELECT o.id, o.parcelle_id, o.type, o.date_obs, o.valeur, o.created_at,
+      `SELECT o.id, o.parcelle_id, o.type, TO_CHAR(o.date_obs, 'YYYY-MM-DD') AS date_obs, o.valeur, o.created_at,
               p.nom AS parcelle
        FROM observations o
        LEFT JOIN parcelles p ON p.id = o.parcelle_id
@@ -15,7 +15,7 @@ const ObservationModel = {
 
   findById: async (id) => {
     const { rows } = await pool.query(
-      `SELECT o.id, o.parcelle_id, o.type, o.date_obs, o.valeur, o.created_at,
+      `SELECT o.id, o.parcelle_id, o.type, TO_CHAR(o.date_obs, 'YYYY-MM-DD') AS date_obs, o.valeur, o.created_at,
               p.nom AS parcelle
        FROM observations o
        LEFT JOIN parcelles p ON p.id = o.parcelle_id
@@ -28,7 +28,7 @@ const ObservationModel = {
   // Observations d'une parcelle (timeline du journal de culture)
   findByParcelle: async (parcelleId) => {
     const { rows } = await pool.query(
-      `SELECT id, parcelle_id, type, date_obs, valeur, created_at
+      `SELECT id, parcelle_id, type, TO_CHAR(date_obs, 'YYYY-MM-DD') AS date_obs, valeur, created_at
        FROM observations
        WHERE parcelle_id = $1
        ORDER BY date_obs DESC, id DESC`,
@@ -41,7 +41,7 @@ const ObservationModel = {
     const { rows } = await pool.query(
       `INSERT INTO observations (parcelle_id, type, date_obs, valeur)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, parcelle_id, type, date_obs, valeur, created_at`,
+       RETURNING id, parcelle_id, type, TO_CHAR(date_obs, 'YYYY-MM-DD') AS date_obs, valeur, created_at`,
       [parcelle_id, type, date_obs, valeur || null]
     );
     return rows[0];
@@ -52,7 +52,7 @@ const ObservationModel = {
       `UPDATE observations
        SET parcelle_id = $1, type = $2, date_obs = $3, valeur = $4
        WHERE id = $5
-       RETURNING id, parcelle_id, type, date_obs, valeur, created_at`,
+       RETURNING id, parcelle_id, type, TO_CHAR(date_obs, 'YYYY-MM-DD') AS date_obs, valeur, created_at`,
       [parcelle_id, type, date_obs, valeur || null, id]
     );
     return rows[0] || null;

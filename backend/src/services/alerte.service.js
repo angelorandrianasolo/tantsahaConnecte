@@ -15,7 +15,7 @@ const AlerteService = {
 
   obtenir: async (id) => {
     const a = await AlerteModel.findById(id);
-    if (!a) throw { status: 404, message: 'Alerte introuvable' };
+    if (!a) throw { status: 404, message: 'Tsy misy fampitandremana' };
     return a;
   },
 
@@ -27,32 +27,32 @@ const AlerteService = {
   modifier: async (id, data) => {
     AlerteService.valider(data);
     const a = await AlerteModel.update(id, data);
-    if (!a) throw { status: 404, message: 'Alerte introuvable' };
+    if (!a) throw { status: 404, message: 'Tsy misy fampitandremana' };
     return a;
   },
 
   // Retour d'action dans l'app : "j'ai traité" / "non lue"
   marquerLue: async (id) => {
     const a = await AlerteModel.marquerLue(id);
-    if (!a) throw { status: 404, message: 'Alerte introuvable' };
+    if (!a) throw { status: 404, message: 'Tsy misy fampitandremana' };
     return a;
   },
 
   supprimer: async (id) => {
     const ok = await AlerteModel.remove(id);
-    if (!ok) throw { status: 404, message: 'Alerte introuvable' };
-    return { message: 'Alerte supprimée' };
+    if (!ok) throw { status: 404, message: 'Tsy misy fampitandremana' };
+    return { message: 'Voafafana ny fampitandremana' };
   },
 
   valider: (data) => {
     if (!data.type || !TYPES_VALIDES.includes(data.type)) {
-      throw { status: 400, message: `Type invalide. Valeurs admises : ${TYPES_VALIDES.join(', ')}` };
+      throw { status: 400, message: `Diso ny karazana. Adino: ${TYPES_VALIDES.join(', ')}` };
     }
     if (data.priorite && !PRIORITES_VALIDES.includes(data.priorite)) {
-      throw { status: 400, message: `Priorité invalide. Valeurs admises : ${PRIORITES_VALIDES.join(', ')}` };
+      throw { status: 400, message: `Diso ny lahateny. Adino: ${PRIORITES_VALIDES.join(', ')}` };
     }
     if (!data.message || !data.message.trim()) {
-      throw { status: 400, message: 'Le champ "message" est obligatoire' };
+      throw { status: 400, message: 'Ilaina ny fehezanteny' };
     }
   },
 };

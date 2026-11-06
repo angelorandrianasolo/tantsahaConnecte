@@ -12,13 +12,13 @@ const ObservationService = {
 
   listerParcelle: async (parcelleId) => {
     const p = await ParcelleModel.findById(parcelleId);
-    if (!p) throw { status: 404, message: 'Parcelle introuvable' };
+    if (!p) throw { status: 404, message: 'Tsy misy tanimbary' };
     return ObservationModel.findByParcelle(parcelleId);
   },
 
   obtenir: async (id) => {
     const o = await ObservationModel.findById(id);
-    if (!o) throw { status: 404, message: 'Observation introuvable' };
+    if (!o) throw { status: 404, message: 'Tsy misy tatitra' };
     return o;
   },
 
@@ -30,40 +30,40 @@ const ObservationService = {
   modifier: async (id, data) => {
     await ObservationService.valider(data);
     const o = await ObservationModel.update(id, data);
-    if (!o) throw { status: 404, message: 'Observation introuvable' };
+    if (!o) throw { status: 404, message: 'Tsy misy tatitra' };
     return o;
   },
 
   supprimer: async (id) => {
     const ok = await ObservationModel.remove(id);
-    if (!ok) throw { status: 404, message: 'Observation introuvable' };
-    return { message: 'Observation supprimée' };
+    if (!ok) throw { status: 404, message: 'Tsy misy tatitra' };
+    return { message: 'Voafafana ny tatitra' };
   },
 
   // Validations métier
   valider: async (data) => {
     if (!data.parcelle_id) {
-      throw { status: 400, message: 'Le champ "parcelle_id" est obligatoire' };
+      throw { status: 400, message: 'Ilaina ny id-ilay tanimbary' };
     }
     const p = await ParcelleModel.findById(data.parcelle_id);
-    if (!p) throw { status: 400, message: 'Parcelle introuvable' };
+    if (!p) throw { status: 400, message: 'Tsy misy tanimbary' };
 
     if (!data.type || !TYPES_VALIDES.includes(data.type)) {
-      throw { status: 400, message: `Type invalide. Valeurs admises : ${TYPES_VALIDES.join(', ')}` };
+      throw { status: 400, message: `Diso ny karazana. Adino: ${TYPES_VALIDES.join(', ')}` };
     }
 
     if (!data.date_obs) {
-      throw { status: 400, message: 'Le champ "date_obs" est obligatoire' };
+      throw { status: 400, message: 'Ilaina ny andro nitranga' };
     }
     // règle métier UML : date de saisie <= aujourd'hui
     const dateSaisie = new Date(data.date_obs);
     if (Number.isNaN(dateSaisie.getTime())) {
-      throw { status: 400, message: 'Format de date invalide (AAAA-MM-JJ)' };
+      throw { status: 400, message: 'Diso ny endrika daty (AAAA-MM-JJ)' };
     }
     const aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
     if (dateSaisie > aujourdhui) {
-      throw { status: 400, message: 'Impossible de saisir une observation datée dans le futur' };
+      throw { status: 400, message: 'Tsy mety ny andro ho avy' };
     }
   },
 };

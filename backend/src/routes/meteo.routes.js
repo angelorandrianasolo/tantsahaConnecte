@@ -3,6 +3,7 @@ const router = express.Router();
 const MeteoController = require('../controllers/meteo.controller');
 
 router.get('/icones', MeteoController.icones);            // avant /:date
+router.post('/actualisation', MeteoController.actualiser); // météo réelle (Open-Meteo)
 router.get('/prochains-jours', MeteoController.prochainsJours);
 router.get('/', MeteoController.lister);
 router.get('/:date/favorable-semis', MeteoController.estFavorable);

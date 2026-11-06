@@ -13,14 +13,14 @@ const SyncService = {
   // --- Envoi (le terminal vide sa file d'attente) ---
   envoyer: async (lot) => {
     if (!lot || typeof lot !== 'object') {
-      throw { status: 400, message: 'Corps de requête invalide' };
+      throw { status: 400, message: 'Diso ny angona nomena' };
     }
 
     const observations = Array.isArray(lot.observations) ? lot.observations : [];
     const alertesLues = Array.isArray(lot.alertesLues) ? lot.alertesLues : [];
 
     if (observations.length > TAILLE_MAX_LOT || alertesLues.length > TAILLE_MAX_LOT) {
-      throw { status: 400, message: `Lot trop grand : ${TAILLE_MAX_LOT} éléments maximum` };
+      throw { status: 400, message: `Be loatra: ${TAILLE_MAX_LOT} zavatra azo amarina` };
     }
 
     const importees = [];
@@ -33,7 +33,7 @@ const SyncService = {
         const o = await ObservationService.creer(observations[i]);
         importees.push(o);
       } catch (e) {
-        erreurs.push({ index: i, message: e.message || 'Observation invalide' });
+        erreurs.push({ index: i, message: e.message || 'Tsy mety ny tatitra' });
       }
     }
 
@@ -44,7 +44,7 @@ const SyncService = {
         await AlerteService.marquerLue(Number(id));
         alertesMarquees++;
       } catch (e) {
-        erreurs.push({ alerteId: id, message: e.message || 'Alerte invalide' });
+        erreurs.push({ alerteId: id, message: e.message || 'Tsy mety ny fampitandremana' });
       }
     }
 

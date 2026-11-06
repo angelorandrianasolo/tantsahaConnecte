@@ -11,7 +11,7 @@ const DashboardService = {
       MeteoModel.findProchainsJours(3),          // bandeau météo
       AlerteModel.findNonLues(),                 // badge d'alertes
       pool.query(
-        `SELECT o.id, o.type, o.date_obs, o.valeur, p.nom AS parcelle
+        `SELECT o.id, o.type, TO_CHAR(o.date_obs, 'YYYY-MM-DD') AS date_obs, o.valeur, p.nom AS parcelle
          FROM observations o
          LEFT JOIN parcelles p ON p.id = o.parcelle_id
          ORDER BY o.date_obs DESC, o.id DESC

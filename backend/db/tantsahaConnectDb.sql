@@ -69,19 +69,19 @@ INSERT INTO parcelles (utilisateur_id, nom, region) VALUES
   (2, 'Kilalaky B',  'Toamasina');
 
 INSERT INTO observations (parcelle_id, type, date_obs, valeur) VALUES
-  (1, 'PLANTATION', '2026-01-15', 'Semis riz'),
-  (1, 'PLUIE',      '2026-01-20', 'Pluie forte');
+  (1, 'PLANTATION', '2026-01-15', 'Namonokana vary'),
+  (1, 'PLUIE',      '2026-01-20', 'Orana mafy');
 
 INSERT INTO alertes (type, priorite, message) VALUES
-  ('SEMIS', 'URGENTE', 'Semis dans 3 jours');
+  ('SEMIS', 'URGENTE', 'Famonokana amin''ny 3 andro');
 
 INSERT INTO previsions_meteo (date_prev, icone, proba_pluie, temp_min, temp_max) VALUES
-  (CURRENT_DATE,     'soleil', 10, 18.0, 30.0),
-  (CURRENT_DATE + 1, 'nuage',  40, 19.0, 27.0),
-  (CURRENT_DATE + 2, 'pluie',  80, 18.0, 24.0);
+  (CURRENT_DATE,     'masoandro', 10, 18.0, 30.0),
+  (CURRENT_DATE + 1, 'mandravona', 40, 19.0, 27.0),
+  (CURRENT_DATE + 2, 'orana',      80, 18.0, 24.0);
 
 INSERT INTO conseils (theme, titre, contenu) VALUES
-  ('PARASITES', 'Tisserand du riz', 'Vérifier les feuilles chaque semaine.');
+  ('PARASITES', 'Mpanala ao amin''ny vary', 'Jereo ny ravina isan-kerinandro, ary esorin-dro izay eo misy.');
 
 -- Vérification ---------------------------------------------
 SELECT 'utilisateurs' AS table, count(*) FROM utilisateurs

@@ -2,7 +2,7 @@ const UtilisateurService = require('../services/utilisateur.service');
 
 // Contrôleur (couche HTTP) — utilisateurs
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' });
+  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
 });
 
 const UtilisateurController = {
