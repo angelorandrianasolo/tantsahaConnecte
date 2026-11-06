@@ -1,0 +1,76 @@
+const AlerteModel = require('../models/alerte.model');
+const MeteoModel = require('../models/meteo.model');
+const ConseilModel = require('../models/conseil.model');
+const ObservationService = require('./observation.service');
+const AlerteService = require('./alerte.service');
+
+const TAILLE_MAX_LOT = 50; // lot maximal envoyé par le téléphone
+
+// Service (logique métier) — synchro hors ligne
+// Téléphone → serveur : POST /sync/envoi   (file d'attente locale)
+// Téléphone ← serveur : GET  /sync/telechargement (rafraîchir le cache)
+const SyncService = {
+  // --- Envoi (le terminal vide sa file d'attente) ---
+  envoyer: async (lot) => {
+    if (!lot || typeof lot !== 'object') {
+      throw { status: 400, message: 'Corps de requête invalide' };
+    }
+
+    const observations = Array.isArray(lot.observations) ? lot.observations : [];
+    const alertesLues = Array.isArray(lot.alertesLues) ? lot.alertesLues : [];
+
+    if (observations.length > TAILLE_MAX_LOT || alertesLues.length > TAILLE_MAX_LOT) {
+      throw { status: 400, message: `Lot trop grand : ${TAILLE_MAX_LOT} éléments maximum` };
+    }
+
+    const importees = [];
+    const erreurs = [];
+
+    // 1) Observations : chacune validée individuellement,
+    //    un échec n'annule pas les autres (jamais de perte de saisie)
+    for (let i = 0; i < observations.length; i++) {
+      try {
+        const o = await ObservationService.creer(observations[i]);
+        importees.push(o);
+      } catch (e) {
+        erreurs.push({ index: i, message: e.message || 'Observation invalide' });
+      }
+    }
+
+    // 2) Alertes marquées comme traitées (état AL1 → AL2 du diagramme d'états)
+    let alertesMarquees = 0;
+    for (const id of alertesLues) {
+      try {
+        await AlerteService.marquerLue(Number(id));
+        alertesMarquees++;
+      } catch (e) {
+        erreurs.push({ alerteId: id, message: e.message || 'Alerte invalide' });
+      }
+    }
+
+    return {
+      importees: importees.length,
+      alertesMarquees,
+      erreurs,
+      synchroAt: new Date().toISOString(),
+    };
+  },
+
+  // --- Téléchargement (rafraîchir le cache pour le mode hors ligne) ---
+  telecharger: async () => {
+    const [alertes, previsions, conseils] = await Promise.all([
+      AlerteModel.findNonLues(),                 // badge de notifications
+      MeteoModel.findProchainsJours(3),          // l'app n'affiche que 3 jours
+      ConseilModel.findAll(),                    // fiches + audio à mettre en cache
+    ]);
+
+    return {
+      alertes,
+      previsions,
+      conseils,
+      synchroAt: new Date().toISOString(),
+    };
+  },
+};
+
+module.exports = SyncService;

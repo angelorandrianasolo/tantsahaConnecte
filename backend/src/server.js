@@ -10,6 +10,8 @@ app.use('/parcelles', require('./routes/parcelle.routes'));
 app.use('/observations', require('./routes/observation.routes'));
 app.use('/alertes', require('./routes/alerte.routes'));
 app.use('/meteo', require('./routes/meteo.routes'));
+app.use('/conseils', require('./routes/conseil.routes'));
+app.use('/sync', require('./routes/sync.routes'));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
