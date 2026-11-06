@@ -9,6 +9,7 @@ app.use('/utilisateurs', require('./routes/utilisateur.routes'));
 app.use('/parcelles', require('./routes/parcelle.routes'));
 app.use('/observations', require('./routes/observation.routes'));
 app.use('/alertes', require('./routes/alerte.routes'));
+app.use('/meteo', require('./routes/meteo.routes'));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
