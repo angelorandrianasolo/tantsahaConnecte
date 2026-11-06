@@ -6,6 +6,7 @@ app.use(express.json());
 // --- Routes MVC ---
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/utilisateurs', require('./routes/utilisateur.routes'));
+app.use('/parcelles', require('./routes/parcelle.routes'));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
