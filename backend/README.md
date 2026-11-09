@@ -11,7 +11,25 @@ npm test           # test de non-régression (démarre le serveur sur :3101)
 ```
 
 Base de données : `psql -U postgres -f db/tantsahaConnectDb.sql`
+(fichier tout-en-un : **recrée la base** avec ses tables + données de démonstration).
 Connexion : user `root` sans mot de passe (mode trust), port `5432`, base `tantsaha_connect`.
+
+Variables d'environnement (facultatives) :
+
+| Var | Rôle |
+|---|---|
+| `PORT` | port du serveur (3000 par défaut) |
+| `CORS_ORIGINS` | origines autorisées, séparées par des virgules (ouvert sinon) |
+| `LIMIT_REQUETES` | requêtes max / minute / IP (200 par défaut, 429 au-delà) |
+| `SANS_LIMIT` | `1` pour désactiver le limitateur (démo) |
+
+## Enveloppe de réponse (harmonisée)
+
+- **liste** → tableau JSON brut `[{...}]`
+- **objet** → `{...}`
+- **création** → `201` + l'objet créé
+- **erreur** → `{"error": "..."}` — traduite en français si `?lang=fr`
+- **authentification** → `401 {"error":"Tsy misy feo token"}` (`?lang=fr` → *Session introuvable ou expirée*)
 
 ## Ce que fait le serveur automatiquement
 
@@ -22,11 +40,15 @@ Connexion : user `root` sans mot de passe (mode trust), port `5432`, base `tants
 
 | Méthode | Route | Rôle |
 |---|---|---|
-| GET | `/health` | état du serveur |
+| GET | `/health` | état du serveur **+ PostgreSQL** (503 si base absente) |
+| **Session — « qui suis-je ? »** |
+| POST | `/session` `{utilisateur_id}` | connexion → `{token, utilisateur}` |
+| GET | `/session?token=` | identité de l'utilisateur connecté (401 sinon) |
+| DELETE | `/session` | déconnexion |
 | **Utilisateurs** |
 | GET/POST | `/utilisateurs` | liste / création |
 | GET/PUT/DELETE | `/utilisateurs/:id` | lecture / modification / suppression |
-| PUT | `/utilisateurs/:id/preferences` | région + latitude/longitude (pour la météo) |
+| PUT | `/utilisateurs/:id/preferences` | région + lat/long — **session obligatoire** (401, 403 si compte d'autrui) |
 | **Parcelles** |
 | GET/POST | `/parcelles` | liste (avec propriétaire + culture) / création |
 | GET/PUT/DELETE | `/parcelles/:id` | CRUD |
@@ -35,12 +57,15 @@ Connexion : user `root` sans mot de passe (mode trust), port `5432`, base `tants
 | GET | `/cultures/:id/recolte-estimee?plantation=AAAA-MM-JJ` | date de récolte = plantation + cycle |
 | GET/PUT/DELETE | `/cultures/:id` | CRUD |
 | **Observations (journal)** |
-| GET | `/observations` · `/observations/parcelle/:id` · `/observations/types` | listes |
-| GET/POST/PUT/DELETE | `/observations[/:id]` | CRUD (type contrôlé, pas de date future) |
+| GET | `/observations?parcelle_id=&type=&du=&au=&limit=&offset=` | liste filtrée + paginée (limit ≤ 500) |
+| GET | `/observations/parcelle/:id` · `/observations/types` | timeline d'une parcelle / types admis |
+| GET/POST/PUT/DELETE | `/observations[/:id]` | CRUD — type contrôlé, date ≤ aujourd'hui, **photo base64 ≤ 500 Ko** |
 | **Alertes** |
-| GET | `/alertes` · `/alertes/non-lues` · `/alertes/meta` | listes triées (urgentes d'abord) |
+| GET | `/alertes?type=&priorite=&lue=&limit=&offset=` | liste filtrée (urgentes d'abord) |
+| GET | `/alertes/non-lues` | **avec token** = non lues *par moi* ; sans = non traitées |
+| GET | `/alertes/meta` | types + priorités |
 | POST | `/alertes/actualisation` | **génère les alertes automatiques** |
-| PATCH | `/alertes/:id/lue` | marquer comme traitée |
+| PATCH | `/alertes/:id/lue` | token → *je l'ai vue* (les autres la voient encore) ; sans token → traitée globalement |
 | GET/POST/PUT/DELETE | `/alertes[/:id]` | CRUD |
 | **Météo (réelle : Open-Meteo)** |
 | POST | `/meteo/actualisation` `{latitude, longitude, lieu}` | rafraîchit une région |
@@ -60,8 +85,8 @@ Connexion : user `root` sans mot de passe (mode trust), port `5432`, base `tants
 | GET | `/conseils/:id/version-vocale?lang=` | texte prêt pour la voix |
 | GET/POST/PUT/DELETE | `/conseils[/:id]` | CRUD (contenu ≤ 300 caractères, FR + MG) |
 | **Synchro hors ligne** |
-| POST | `/sync/envoi` `{observations[], alertesLues[]}` | vide la file d'attente du téléphone (lots ≤ 50) |
-| GET | `/sync/telechargement` | bundle pour le cache : alertes + 3 jours météo + conseils |
+| POST | `/sync/envoi` `{observations[], alertesLues[]}` | vide la file du téléphone (lots ≤ 50) et renvoie **`correspondances [{idTemporaire, id}]`** |
+| GET | `/sync/telechargement` | **bundle complet** : identité + lieu + parcelles + cultures + 500 obs. + alertes + 3 j météo + conseils |
 | **Tableau de bord** |
 | GET | `/dashboard` | état du jour en **1 appel** (météo, alertes, dernière obs, parcelles) |
 

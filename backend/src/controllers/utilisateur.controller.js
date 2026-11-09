@@ -26,7 +26,12 @@ const UtilisateurController = {
   }),
 
   preferences: wrap(async (req, res) => {
-    res.json(await UtilisateurService.preferences(Number(req.params.id), req.body));
+    const id = Number(req.params.id);
+    // on ne modifie que SES propres préférences
+    if (req.utilisateur && req.utilisateur.id !== id) {
+      throw { status: 403, message: "Tsy afaka manova ny anjaran'ny hafa" };
+    }
+    res.json(await UtilisateurService.preferences(id, req.body));
   }),
 };
 

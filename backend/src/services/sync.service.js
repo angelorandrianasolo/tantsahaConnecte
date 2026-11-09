@@ -24,14 +24,20 @@ const SyncService = {
     }
 
     const importees = [];
+    const correspondances = [];   // { idTemporaire -> id définitif } pour le téléphone
     const erreurs = [];
 
     // 1) Observations : chacune validée individuellement,
     //    un échec n'annule pas les autres (jamais de perte de saisie)
     for (let i = 0; i < observations.length; i++) {
+      const o = observations[i];
+      // id négatif = id temporaire du cache local
+      const temp = o.idTemporaire != null ? o.idTemporaire
+        : (Number(o.id) < 0 ? Number(o.id) : null);
       try {
-        const o = await ObservationService.creer(observations[i]);
-        importees.push(o);
+        const cree = await ObservationService.creer(o);
+        importees.push(cree);
+        if (temp != null) correspondances.push({ idTemporaire: temp, id: cree.id });
       } catch (e) {
         erreurs.push({ index: i, message: e.message || 'Tsy mety ny tatitra' });
       }
@@ -50,6 +56,7 @@ const SyncService = {
 
     return {
       importees: importees.length,
+      correspondances,               // le terminal remplace ses ids locaux
       alertesMarquees,
       erreurs,
       synchroAt: new Date().toISOString(),
@@ -57,14 +64,28 @@ const SyncService = {
   },
 
   // --- Téléchargement (rafraîchir le cache pour le mode hors ligne) ---
-  telecharger: async () => {
-    const [alertes, previsions, conseils] = await Promise.all([
-      AlerteModel.findNonLues(),                 // badge de notifications
-      MeteoModel.findProchainsJours(3, require('./meteo.service').LIEU_DEFAUT),
-      ConseilModel.findAll(),                    // fiches + audio à mettre en cache
-    ]);
+  // bundle COMPLET : identité, parcelles, cultures, journal, alertes, météo, conseils
+  telecharger: async (utilisateur) => {
+    const lieu = utilisateur && utilisateur.region
+      ? utilisateur.region
+      : require('./meteo.service').LIEU_DEFAUT;
+
+    const [parcelles, cultures, observations, alertes, previsions, conseils] =
+      await Promise.all([
+        require('../models/parcelle.model').findAll(),
+        require('../models/culture.model').findAll(),
+        require('../models/observation.model').findAll({ limit: 500 }),
+        AlerteModel.findNonLues(utilisateur ? utilisateur.id : null),
+        MeteoModel.findProchainsJours(3, lieu),
+        ConseilModel.findAll(),   // fiches + paramètres audio à mettre en cache
+      ]);
 
     return {
+      utilisateur: utilisateur || null,
+      lieu,
+      parcelles,
+      cultures,
+      observations,
       alertes,
       previsions,
       conseils,

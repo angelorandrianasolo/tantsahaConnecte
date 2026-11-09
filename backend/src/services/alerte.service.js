@@ -9,9 +9,10 @@ const AlerteService = {
   TYPES: TYPES_VALIDES,
   PRIORITES: PRIORITES_VALIDES,
 
-  lister: () => AlerteModel.findAll(),
+  lister: (filtres) => AlerteModel.findAll(AlerteService.nettoyerFiltres(filtres)),
 
-  listerNonLues: () => AlerteModel.findNonLues(),
+  listerNonLues: (utilisateur) =>
+    AlerteModel.findNonLues(utilisateur ? utilisateur.id : null),
 
   obtenir: async (id) => {
     const a = await AlerteModel.findById(id);
@@ -31,12 +32,23 @@ const AlerteService = {
     return a;
   },
 
-  // Retour d'action dans l'app : "j'ai traité" / "non lue"
-  marquerLue: async (id) => {
-    const a = await AlerteModel.marquerLue(id);
+  // Retour d'action dans l'app : "j'ai traité" / "je l'ai vue"
+  marquerLue: async (id, utilisateur) => {
+    const a = utilisateur
+      ? await AlerteModel.marquerVue(id, utilisateur.id)   // vue personnelle
+      : await AlerteModel.marquerLue(id);                  // traitée globalement
     if (!a) throw { status: 404, message: 'Tsy misy fampitandremana' };
     return a;
   },
+
+  // Filtres de liste : valeurs propres + pagination (limit max 500)
+  nettoyerFiltres: (f = {}) => ({
+    type: f.type || null,
+    priorite: f.priorite || null,
+    lue: f.lue === 'true' ? true : f.lue === 'false' ? false : null,
+    limit: Math.min(Math.max(Number(f.limit) || 100, 1), 500),
+    offset: Math.max(Number(f.offset) || 0, 0),
+  }),
 
   supprimer: async (id) => {
     const ok = await AlerteModel.remove(id);

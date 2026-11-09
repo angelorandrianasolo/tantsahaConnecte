@@ -68,6 +68,17 @@ const FR = {
   'Ilaina ny hoe horesahina': 'Le champ "texte" est obligatoire',
   'Diso ny fitsipika hafatra': 'Langue non prise en charge (mg ou fr)',
   'Diso ny hafainganam-piresaka': 'Vitesse invalide (entre 0.5 et 1.5)',
+
+  // Session
+  'Ilaina ny mpampiasa': 'Le champ "utilisateur_id" est obligatoire',
+  'Tsy misy feo token': 'Session introuvable ou expirée',
+  'Voafarana ny feo token': 'Session fermée',
+  "Tsy afaka manova ny anjaran'ny hafa": "Impossible de modifier les préférences d'un autre utilisateur",
+
+  // Photos / sécurité
+  "Diso ny endrik'ny sary: data:image no ilaina": "Format d'image invalide : data:image attendu",
+  'Lany be loatra ny sary: 500 ko farany': 'Image trop lourde : 500 Ko maximum',
+  'Be loatra ny fangatahana': 'Trop de requêtes, réessayez dans une minute',
 };
 
 // Préfixes (messages dynamiques : on ne traduit que le début)

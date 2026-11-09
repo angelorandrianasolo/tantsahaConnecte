@@ -5,11 +5,11 @@ const { wrap } = require('../middlewares/http');
 
 const AlerteController = {
   lister: wrap(async (req, res) => {
-    res.json(await AlerteService.lister());
+    res.json(await AlerteService.lister(req.query));
   }),
 
   listerNonLues: wrap(async (req, res) => {
-    res.json(await AlerteService.listerNonLues());
+    res.json(await AlerteService.listerNonLues(req.utilisateur));
   }),
 
   obtenir: wrap(async (req, res) => {
@@ -25,7 +25,7 @@ const AlerteController = {
   }),
 
   marquerLue: wrap(async (req, res) => {
-    res.json(await AlerteService.marquerLue(Number(req.params.id)));
+    res.json(await AlerteService.marquerLue(Number(req.params.id), req.utilisateur));
   }),
 
   supprimer: wrap(async (req, res) => {

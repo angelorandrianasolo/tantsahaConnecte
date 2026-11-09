@@ -9,7 +9,7 @@ const SyncController = {
   }),
 
   telecharger: wrap(async (req, res) => {
-    res.json(await SyncService.telecharger());
+    res.json(await SyncService.telecharger(req.utilisateur));
   }),
 };
 

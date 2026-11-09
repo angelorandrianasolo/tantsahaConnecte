@@ -34,6 +34,7 @@ CREATE TABLE observations (
     type          VARCHAR(30) NOT NULL,   -- PLUIE, RAVAGEUR, PLANTATION, RECOLTE
     date_obs      DATE        NOT NULL,
     valeur        VARCHAR(255),
+    photo         TEXT,                   -- image en base64 (ravageur, feuille...)
     created_at    TIMESTAMP   DEFAULT NOW()
 );
 
@@ -42,8 +43,23 @@ CREATE TABLE alertes (
     type          VARCHAR(30) NOT NULL,   -- SEMIS, RECOLTE, METEO, RAVAGEUR
     priorite      VARCHAR(20) DEFAULT 'NORMALE',
     message       VARCHAR(255),
-    lue           BOOLEAN DEFAULT FALSE,
+    lue           BOOLEAN DEFAULT FALSE,   -- traitée (état AL2)
     created_at    TIMESTAMP  DEFAULT NOW()
+);
+
+-- Lecture D'UNE alerte PAR UN utilisateur ("vue" personnelles)
+CREATE TABLE alertes_lues (
+    alerte_id      INT REFERENCES alertes(id) ON DELETE CASCADE,
+    utilisateur_id INT REFERENCES utilisateurs(id) ON DELETE CASCADE,
+    created_at     TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (alerte_id, utilisateur_id)
+);
+
+-- Session : le téléphone garde son token en cache (pas de reconnexion)
+CREATE TABLE sessions (
+    token          VARCHAR(64) PRIMARY KEY,
+    utilisateur_id INT NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+    created_at     TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE previsions_meteo (
@@ -87,11 +103,19 @@ INSERT INTO parcelles (utilisateur_id, nom, region) VALUES
   (2, 'Kilalaky B',  'Toamasina');
 
 INSERT INTO observations (parcelle_id, type, date_obs, valeur) VALUES
-  (1, 'PLANTATION', '2026-01-15', 'Namonokana vary'),
-  (1, 'PLUIE',      '2026-01-20', 'Orana mafy');
+  (1, 'PLANTATION', CURRENT_DATE - 105, 'Namonokana vary'),
+  (1, 'PLUIE',      CURRENT_DATE - 98,  'Orana mafy'),
+  (1, 'RAVAGEUR',   CURRENT_DATE - 40,  'Mpanala teo amin''ny ravina'),
+  (2, 'PLANTATION', CURRENT_DATE - 88,  'Namonokana maizy'),
+  (2, 'PLUIE',      CURRENT_DATE - 12,  'Orana 35 kalitiana'),
+  (2, 'RECOLTE',    CURRENT_DATE - 5,   'Nivoaka 40 kilao');
 
 INSERT INTO alertes (type, priorite, message) VALUES
   ('SEMIS', 'URGENTE', 'Famonokana amin''ny 3 andro');
+
+INSERT INTO alertes (type, priorite, message) VALUES
+  ('RAVAGEUR', 'URGENTE', 'Mpanala ao amin''ny Tanimbary A'),
+  ('RECOLTE',  'NORMALE', 'Famokarana maizy eo ho eo');
 
 INSERT INTO previsions_meteo (date_prev, lieu, icone, proba_pluie, temp_min, temp_max) VALUES
   (CURRENT_DATE,     'Antsirabe', 'masoandro', 10, 18.0, 30.0),
@@ -101,7 +125,34 @@ INSERT INTO previsions_meteo (date_prev, lieu, icone, proba_pluie, temp_min, tem
 INSERT INTO conseils (theme, titre, titre_fr, contenu, contenu_fr) VALUES
   ('PARASITES', 'Mpanala ao amin''ny vary', 'Chenille sur le riz',
    'Jereo ny ravina isan-kerinandro, ary esorin-dro izay eo misy.',
-   'Inspectez les feuilles chaque semaine et retirez les feuilles atteintes.');
+   'Inspectez les feuilles chaque semaine et retirez les feuilles atteintes.'),
+  ('PARASITES', 'Ovy malaza eo amin''ny voanjo', 'Mouche blanche du haricot',
+   'Aseho ny tongony mafana, ka ny feno eo amin''ny tany no harena.',
+   'Plantez en saison sèche et paillez le sol pour limiter les mouches.'),
+  ('IRRIGATION', 'Fandraisana rano mahavelona', 'Apport d''eau vital',
+   'Omeo ny rano isan-karazany amin''ny maraina vao masoandro mafana.',
+   'Arrosez tôt le matin avant les fortes chaleurs.'),
+  ('IRRIGATION', 'Fandraisana rano amin''ny ranomasina', 'Arrosage goutte à goutte',
+   'Ireo karazana tongotra kely no ampiasaina mba hioreny ny rano.',
+   'Utilisez de petits procédés pour économiser l’eau.'),
+  ('SEMIS', 'Fotoana mety hamono', 'Période favorable au semis',
+   'Jereo ny orana 70 kalitiana ambanin''ny masoandro madinika.',
+   'Visez 70 % de pluie sous un ciel couvert.'),
+  ('SEMIS', 'Fototra hanombohana', 'Préparation des semis',
+   'Feno tsara ny tany aloha, ary atao eo anoloana ny lovia.',
+   'Bêchez bien la terre avant de mettre en pépinière.'),
+  ('RECOLTE', 'Fotoana hamokarana', 'Période de récolte',
+   'Omeo andro mamy fa tsy orana mafy rehefa mamoaka.',
+   'Choisissez une journée sèche pour moissonner.'),
+  ('RECOLTE', 'Fitehirizana ny vokatra', 'Conservation de la récolte',
+   'Atao eo amin''ny maimaim-poana sy masoandro ny vary vao voavidy.',
+   'Séchez le riz au soleil et stockez-le au sec.'),
+  ('MALADIES', 'Ravina maitso mivoaka', 'Feuille tachetée',
+   'Esoriny ny ravina voafantatra, ary aza asehony akaiky ny harena.',
+   'Retirez les feuilles touchées et ne les laissez pas près des plants.'),
+  ('MALADIES', 'Fitsimbohana eo amin''ny hazo', 'Champignons du fruit',
+   'Aseho ny tongony mafana ka ny feno eo amin''ny tany no harena.',
+   'Aérez la parcelle et évitez l’humidité stagnante.');
 
 INSERT INTO cultures (nom_mg, pictogramme, duree_cycle_jours) VALUES
   ('Vary',     U&'\+0001F33E', 120),

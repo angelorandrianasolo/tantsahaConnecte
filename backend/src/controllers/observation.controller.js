@@ -5,7 +5,7 @@ const { wrap } = require('../middlewares/http');
 
 const ObservationController = {
   lister: wrap(async (req, res) => {
-    res.json(await ObservationService.lister());
+    res.json(await ObservationService.lister(req.query));
   }),
 
   listerParcelle: wrap(async (req, res) => {

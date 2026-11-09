@@ -8,7 +8,14 @@ const TYPES_VALIDES = ['PLUIE', 'RAVAGEUR', 'PLANTATION', 'RECOLTE', 'MALADIE'];
 const ObservationService = {
   TYPES: TYPES_VALIDES,
 
-  lister: () => ObservationModel.findAll(),
+  lister: (filtres = {}) => ObservationModel.findAll({
+    parcelle_id: filtres.parcelle_id || null,
+    type: filtres.type || null,
+    du: filtres.du || null,
+    au: filtres.au || null,
+    limit: Math.min(Math.max(Number(filtres.limit) || 100, 1), 500),
+    offset: Math.max(Number(filtres.offset) || 0, 0),
+  }),
 
   listerParcelle: async (parcelleId) => {
     const p = await ParcelleModel.findById(parcelleId);
@@ -56,14 +63,25 @@ const ObservationService = {
       throw { status: 400, message: 'Ilaina ny andro nitranga' };
     }
     // règle métier UML : date de saisie <= aujourd'hui
-    const dateSaisie = new Date(data.date_obs);
-    if (Number.isNaN(dateSaisie.getTime())) {
+    const saisie = String(data.date_obs).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(saisie) || Number.isNaN(new Date(saisie).getTime())) {
       throw { status: 400, message: 'Diso ny endrika daty (AAAA-MM-JJ)' };
     }
-    const aujourdhui = new Date();
-    aujourdhui.setHours(0, 0, 0, 0);
-    if (dateSaisie > aujourdhui) {
+    // comparaison des chaînes AAAA-MM-JJ en heure LOCALE (le parse JS part en UTC)
+    const d = new Date();
+    const aujourdhui = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (saisie > aujourdhui) {
       throw { status: 400, message: 'Tsy mety ny andro ho avy' };
+    }
+
+    // Photo facultative : image base64 (data:image/...) de 500 Ko maximum
+    if (data.photo != null && data.photo !== '') {
+      if (typeof data.photo !== 'string' || !data.photo.startsWith('data:image/')) {
+        throw { status: 400, message: "Diso ny endrik'ny sary: data:image no ilaina" };
+      }
+      if (data.photo.length > 700000) {   // ~500 Ko en base64
+        throw { status: 400, message: 'Lany be loatra ny sary: 500 ko farany' };
+      }
     }
   },
 };

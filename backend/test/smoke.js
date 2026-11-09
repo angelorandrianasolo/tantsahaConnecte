@@ -35,7 +35,8 @@ async function main() {
     } catch { await new Promise((r) => setTimeout(r, 500)); }
   }
 
-  await verifier('GET /health', '/health', {}, (r, d) => r.status === 200 && d.status === 'ok');
+  await verifier('GET /health (avec BDD)', '/health', {},
+    (r, d) => r.status === 200 && d.status === 'ok' && d.base === 'ok');
   await verifier('GET /cultures (4 cultures)', '/cultures', {}, (r, d) => r.status === 200 && d.length >= 4);
   await verifier('GET /cultures/1/recolte-estimee', '/cultures/1/recolte-estimee?plantation=2026-01-15', {},
     (r, d) => r.status === 200 && d.dateRecolte === '2026-05-15' && d.dureeCycleJours === 120);
@@ -68,10 +69,79 @@ async function main() {
     await verifier('GET /meteo resume-vocal mg', `/meteo/${jours.data[0].date_prev}/resume-vocal`, {},
       (r, d) => r.status === 200 && /Orana|digera/.test(d.resume) && d.langue === 'mg');
   }
-  await verifier('GET /sync/telechargement', '/sync/telechargement', {},
-    (r, d) => r.status === 200 && d.alertes && d.previsions && d.conseils);
+  await verifier('GET /sync/telechargement (bundle complet)', '/sync/telechargement', {},
+    (r, d) => r.status === 200 && d.parcelles && d.parcelles.length > 0
+      && d.cultures && d.cultures.length >= 4 && d.observations && d.alertes
+      && d.previsions && d.conseils && d.lieu && d.synchroAt);
   await verifier('CORS present', '/health', {}, (r) =>
     !!r.headers.get('access-control-allow-origin'));
+
+  // ---------- Session ("qui suis-je ?") ----------
+  const sess = await verifier('POST /session (connexion)', '/session',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ utilisateur_id: 1 }) },
+    (r, d) => r.status === 201 && d.token && d.utilisateur.id === 1);
+  const token = sess.data ? sess.data.token : '';
+  await verifier('GET /session (qui suis-je ?)', `/session?token=${token}`, {},
+    (r, d) => r.status === 200 && d.utilisateur.nom === 'Rakoto');
+  await verifier('GET /session sans token -> 401', '/session', {}, (r) => r.status === 401);
+  await verifier('PUT preferences sans session -> 401', '/utilisateurs/1/preferences',
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region: 'Antsirabe' }) },
+    (r) => r.status === 401);
+  await verifier('PUT preferences avec session -> 200', `/utilisateurs/1/preferences?token=${token}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region: 'Antsirabe', latitude: -19.8583, longitude: 47.5567 }) },
+    (r, d) => r.status === 200 && d.region === 'Antsirabe');
+  await verifier("PUT preferences d'un autre -> 403", `/utilisateurs/2/preferences?token=${token}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region: 'X' }) },
+    (r) => r.status === 403);
+
+  // ---------- Filtres / pagination ----------
+  await verifier('GET /observations?type=PLUIE', '/observations?type=PLUIE', {},
+    (r, d) => r.status === 200 && d.length > 0 && d.every((o) => o.type === 'PLUIE'));
+  await verifier('GET /observations?limit=2', '/observations?limit=2', {},
+    (r, d) => r.status === 200 && d.length > 0 && d.length <= 2);
+  await verifier('GET /alertes?priorite=URGENTE', '/alertes?priorite=URGENTE', {},
+    (r, d) => r.status === 200 && d.length > 0 && d.every((a) => a.priorite === 'URGENTE'));
+
+  // ---------- Photo (base64) ----------
+  const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==';
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const sary = await verifier('POST /observations avec photo', '/observations',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parcelle_id: 1, type: 'PLUIE', date_obs: aujourdhui,
+        valeur: 'Orana kely', photo }) },
+    (r, d) => r.status === 201 && d.photo === photo);
+  if (sary.data && sary.data.id) {
+    await verifier('DELETE photo de test', `/observations/${sary.data.id}`,
+      { method: 'DELETE' }, (r) => r.status === 200);
+  }
+  await verifier('POST photo trop lourde -> 400', '/observations',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parcelle_id: 1, type: 'PLUIE', date_obs: aujourdhui,
+        photo: 'data:image/png;base64,' + 'A'.repeat(700001) }) },
+    (r) => r.status === 400);
+
+  // ---------- Sync : id temporaire -> id définitif ----------
+  const sy = await verifier('POST /sync/envoi (idTemporaire)', '/sync/envoi',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ observations: [
+        { id: -101, parcelle_id: 2, type: 'PLUIE', date_obs: aujourdhui, valeur: 'Orana novokaina' }] }) },
+    (r, d) => r.status === 200 && d.correspondances
+      && d.correspondances[0].idTemporaire === -101 && d.correspondances[0].id > 0);
+  if (sy.data && sy.data.correspondances && sy.data.correspondances[0]) {
+    await fetch(`${BASE}/observations/${sy.data.correspondances[0].id}`, { method: 'DELETE' });
+  }
+
+  // ---------- Lecture d'alerte par utilisateur ----------
+  const alertes = await (await fetch(`${BASE}/alertes`)).json();
+  if (alertes.length) {
+    await verifier('PATCH /alertes/:id/lue (avec session)',
+      `/alertes/${alertes[0].id}/lue?token=${token}`, { method: 'PATCH' },
+      (r, d) => r.status === 200 && d.id === alertes[0].id);
+  }
 
   await verifier('POST /observations invalide -> 400', '/observations',
     { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -81,6 +151,13 @@ async function main() {
     { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ parcelle_id: 1, type: 'PLUIE', date_obs: '2099-01-01' }) },
     (r) => r.status === 400);
+  const dujour = await verifier('POST /observation du jour J -> 201', '/observations',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parcelle_id: 1, type: 'PLUIE', date_obs: aujourdhui, valeur: 'Orana anio' }) },
+    (r, d) => r.status === 201 && d.date_obs === aujourdhui);
+  if (dujour.data && dujour.data.id) {
+    await fetch(`${BASE}/observations/${dujour.data.id}`, { method: 'DELETE' });
+  }
   await verifier('GET /conseils/99 -> 404', '/conseils/99', {}, (r) => r.status === 404);
   await verifier('GET /conseils/99?lang=fr -> 404 traduit', '/conseils/99?lang=fr', {},
     (r, d) => r.status === 404 && d.error === 'Conseil introuvable');

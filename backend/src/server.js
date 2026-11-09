@@ -4,11 +4,27 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 
-app.use(cors());          // frontend servi depuis un autre origine (Figma, autre port...)
-app.use(express.json());
+// CORS : origines autorisées via CORS_ORIGINS="http://...,http://..." (sinon ouvert)
+const origines = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  : undefined;
+app.use(origines ? cors({ origin: origines }) : cors());
+
+app.use(express.json({ limit: '2mb' }));   // photos en base64 acceptées
+app.use(require('./middlewares/limit').limitateur);
+app.use(require('./middlewares/session').optionnel);   // req.utilisateur si token valide
 
 // --- Routes MVC ---
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', async (req, res) => {
+  // vérifie aussi la base : ok seulement si PostgreSQL répond
+  try {
+    await require('./config/db').query('SELECT 1');
+    res.json({ status: 'ok', base: 'ok', horodatage: new Date().toISOString() });
+  } catch {
+    res.status(503).json({ status: 'degrade', base: 'absente', horodatage: new Date().toISOString() });
+  }
+});
+app.use('/session', require('./routes/session.routes'));
 app.use('/utilisateurs', require('./routes/utilisateur.routes'));
 app.use('/parcelles', require('./routes/parcelle.routes'));
 app.use('/observations', require('./routes/observation.routes'));
