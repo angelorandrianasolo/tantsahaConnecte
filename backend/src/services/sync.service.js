@@ -60,7 +60,7 @@ const SyncService = {
   telecharger: async () => {
     const [alertes, previsions, conseils] = await Promise.all([
       AlerteModel.findNonLues(),                 // badge de notifications
-      MeteoModel.findProchainsJours(3),          // l'app n'affiche que 3 jours
+      MeteoModel.findProchainsJours(3, require('./meteo.service').LIEU_DEFAUT),
       ConseilModel.findAll(),                    // fiches + audio à mettre en cache
     ]);
 

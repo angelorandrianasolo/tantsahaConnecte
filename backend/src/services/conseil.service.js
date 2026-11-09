@@ -46,13 +46,17 @@ const ConseilService = {
     return { message: 'Voafafana ny torolalana' };
   },
 
-  // Version vocale : renvoie le texte prêt à être lu en malagasy
-  versionVocale: async (id) => {
+  // Version vocale bilingue : le texte prêt à être lu (mg par défaut, fr avec ?lang=fr)
+  versionVocale: async (id, langue = 'mg') => {
     const c = await ConseilService.obtenir(id);
+    const fr = String(langue).toLowerCase().startsWith('fr');
+    const titre = fr ? (c.titre_fr || c.titre) : c.titre;
+    const contenu = fr ? (c.contenu_fr || c.contenu) : c.contenu;
     return {
       id: c.id,
+      langue: fr ? 'fr' : 'mg',
       fichierAudio: c.fichier_audio,   // si dispo en cache local
-      texteAVoix: `${c.titre}. ${c.contenu}`,
+      texteAVoix: `${titre}. ${contenu}`,
     };
   },
 
@@ -68,6 +72,10 @@ const ConseilService = {
     }
     // règle du cahier des charges : pas de longs textes (concision)
     if (data.contenu.length > 300) {
+      throw { status: 400, message: 'Lany be loatra: 300 litera farany' };
+    }
+    // version française (multilingue) : même limite de concision
+    if (data.contenu_fr && data.contenu_fr.length > 300) {
       throw { status: 400, message: 'Lany be loatra: 300 litera farany' };
     }
   },

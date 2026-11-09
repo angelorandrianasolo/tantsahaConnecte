@@ -5,7 +5,7 @@
 -- =========================================================
 
 -- 1) Création de la base ----------------------------------
-DROP DATABASE IF EXISTS tantsaha_connect;
+DROP DATABASE IF EXISTS tantsaha_connect WITH (FORCE);   -- ferme les connexions ouvertes
 CREATE DATABASE tantsaha_connect;
 
 \c tantsaha_connect
@@ -15,6 +15,9 @@ CREATE TABLE utilisateurs (
     id            SERIAL PRIMARY KEY,
     nom           VARCHAR(100) NOT NULL,
     langue        VARCHAR(5)   DEFAULT 'MG',
+    region        VARCHAR(100),                    -- préférence : lieu pour la météo
+    latitude      NUMERIC(8,5),
+    longitude     NUMERIC(8,5),
     created_at    TIMESTAMP    DEFAULT NOW()
 );
 
@@ -46,23 +49,38 @@ CREATE TABLE alertes (
 CREATE TABLE previsions_meteo (
     id            SERIAL PRIMARY KEY,
     date_prev     DATE NOT NULL,
+    lieu          VARCHAR(100) NOT NULL DEFAULT 'Antsirabe',  -- météo par région
     icone         VARCHAR(50),
     proba_pluie   INT,
     temp_min      NUMERIC(4,1),
     temp_max      NUMERIC(4,1),
-    UNIQUE (date_prev)
+    UNIQUE (date_prev, lieu)
 );
 
 CREATE TABLE conseils (
     id            SERIAL PRIMARY KEY,
     theme         VARCHAR(50),
     titre         VARCHAR(150),
+    titre_fr      VARCHAR(150),
     contenu       TEXT,
+    contenu_fr    TEXT,
     fichier_audio VARCHAR(255)
 );
 
+-- Cultures (cycle de vie : date de récolte = plantation + duree_cycle_jours)
+CREATE TABLE cultures (
+    id                SERIAL PRIMARY KEY,
+    nom_mg            VARCHAR(100) NOT NULL,
+    pictogramme       VARCHAR(20),
+    duree_cycle_jours INT NOT NULL CHECK (duree_cycle_jours > 0)
+);
+
+ALTER TABLE parcelles ADD COLUMN culture_id INT REFERENCES cultures(id);
+
 -- 3) Jeu de données de test --------------------------------
-INSERT INTO utilisateurs (nom, langue) VALUES ('Rakoto', 'MG'), ('Voahangy', 'MG');
+INSERT INTO utilisateurs (nom, langue, region, latitude, longitude) VALUES
+  ('Rakoto', 'MG', 'Antsirabe', -19.8583, 47.5567),
+  ('Voahangy', 'MG', 'Toamasina', -18.1500, 49.4000);
 
 INSERT INTO parcelles (utilisateur_id, nom, region) VALUES
   (1, 'Tanimbary A', 'Antsirabe'),
@@ -75,13 +93,24 @@ INSERT INTO observations (parcelle_id, type, date_obs, valeur) VALUES
 INSERT INTO alertes (type, priorite, message) VALUES
   ('SEMIS', 'URGENTE', 'Famonokana amin''ny 3 andro');
 
-INSERT INTO previsions_meteo (date_prev, icone, proba_pluie, temp_min, temp_max) VALUES
-  (CURRENT_DATE,     'masoandro', 10, 18.0, 30.0),
-  (CURRENT_DATE + 1, 'mandravona', 40, 19.0, 27.0),
-  (CURRENT_DATE + 2, 'orana',      80, 18.0, 24.0);
+INSERT INTO previsions_meteo (date_prev, lieu, icone, proba_pluie, temp_min, temp_max) VALUES
+  (CURRENT_DATE,     'Antsirabe', 'masoandro', 10, 18.0, 30.0),
+  (CURRENT_DATE + 1, 'Antsirabe', 'mandravona', 40, 19.0, 27.0),
+  (CURRENT_DATE + 2, 'Antsirabe', 'orana',      80, 18.0, 24.0);
 
-INSERT INTO conseils (theme, titre, contenu) VALUES
-  ('PARASITES', 'Mpanala ao amin''ny vary', 'Jereo ny ravina isan-kerinandro, ary esorin-dro izay eo misy.');
+INSERT INTO conseils (theme, titre, titre_fr, contenu, contenu_fr) VALUES
+  ('PARASITES', 'Mpanala ao amin''ny vary', 'Chenille sur le riz',
+   'Jereo ny ravina isan-kerinandro, ary esorin-dro izay eo misy.',
+   'Inspectez les feuilles chaque semaine et retirez les feuilles atteintes.');
+
+INSERT INTO cultures (nom_mg, pictogramme, duree_cycle_jours) VALUES
+  ('Vary',     U&'\+0001F33E', 120),
+  ('Maizy',    U&'\+0001F33D', 90),
+  ('Voanjo',   U&'\+0001FAD8', 60),
+  ('Voatabia', U&'\+0001F360', 120);
+
+UPDATE parcelles SET culture_id = 1 WHERE id = 1;
+UPDATE parcelles SET culture_id = 2 WHERE id = 2;
 
 -- Vérification ---------------------------------------------
 SELECT 'utilisateurs' AS table, count(*) FROM utilisateurs

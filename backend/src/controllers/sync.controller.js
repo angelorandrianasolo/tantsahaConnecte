@@ -1,9 +1,7 @@
 const SyncService = require('../services/sync.service');
 
 // Contrôleur (couche HTTP) — synchro offline
-const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
-});
+const { wrap } = require('../middlewares/http');
 
 const SyncController = {
   envoyer: wrap(async (req, res) => {

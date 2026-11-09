@@ -1,9 +1,7 @@
 const AlerteService = require('../services/alerte.service');
 
 // Contrôleur (couche HTTP) — alertes
-const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
-});
+const { wrap } = require('../middlewares/http');
 
 const AlerteController = {
   lister: wrap(async (req, res) => {
@@ -36,6 +34,12 @@ const AlerteController = {
 
   metadonnees: wrap(async (req, res) => {
     res.json({ types: AlerteService.TYPES, priorites: AlerteService.PRIORITES });
+  }),
+
+  // Génération automatique (plantation + météo)
+  actualisation: wrap(async (req, res) => {
+    const AlerteAutoService = require('../services/alerte-auto.service');
+    res.json(await AlerteAutoService.generer());
   }),
 };
 

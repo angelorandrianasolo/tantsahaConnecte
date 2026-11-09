@@ -3,6 +3,7 @@ const router = express.Router();
 const UtilisateurController = require('../controllers/utilisateur.controller');
 
 router.get('/', UtilisateurController.lister);
+router.put('/:id/preferences', UtilisateurController.preferences); // avant /:id
 router.get('/:id', UtilisateurController.obtenir);
 router.post('/', UtilisateurController.creer);
 router.put('/:id', UtilisateurController.modifier);

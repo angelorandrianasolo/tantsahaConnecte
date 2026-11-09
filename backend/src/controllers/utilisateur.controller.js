@@ -1,9 +1,7 @@
 const UtilisateurService = require('../services/utilisateur.service');
 
 // Contrôleur (couche HTTP) — utilisateurs
-const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
-});
+const { wrap } = require('../middlewares/http');
 
 const UtilisateurController = {
   lister: wrap(async (req, res) => {
@@ -25,6 +23,10 @@ const UtilisateurController = {
 
   supprimer: wrap(async (req, res) => {
     res.json(await UtilisateurService.supprimer(Number(req.params.id)));
+  }),
+
+  preferences: wrap(async (req, res) => {
+    res.json(await UtilisateurService.preferences(Number(req.params.id), req.body));
   }),
 };
 

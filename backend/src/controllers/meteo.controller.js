@@ -1,21 +1,19 @@
 const MeteoService = require('../services/meteo.service');
 
 // Contrôleur (couche HTTP) — météo
-const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
-  res.status(err.status || 500).json({ error: err.message || "Tsy fahazotoana eo amin'ny solosaina" });
-});
+const { wrap } = require('../middlewares/http');
 
 const MeteoController = {
   lister: wrap(async (req, res) => {
-    res.json(await MeteoService.lister());
+    res.json(await MeteoService.lister(req.query.lieu));
   }),
 
   prochainsJours: wrap(async (req, res) => {
-    res.json(await MeteoService.prochainsJours(req.query.nb || 3));
+    res.json(await MeteoService.prochainsJours(req.query.nb, req.query.lieu));
   }),
 
   obtenirParDate: wrap(async (req, res) => {
-    res.json(await MeteoService.obtenirParDate(req.params.date));
+    res.json(await MeteoService.obtenirParDate(req.params.date, req.query.lieu));
   }),
 
   ajouter: wrap(async (req, res) => {
@@ -27,11 +25,11 @@ const MeteoController = {
   }),
 
   estFavorable: wrap(async (req, res) => {
-    res.json(await MeteoService.estFavorableSemis(req.params.date));
+    res.json(await MeteoService.estFavorableSemis(req.params.date, req.query.lieu));
   }),
 
   resumeVocal: wrap(async (req, res) => {
-    res.json(await MeteoService.resumeVocal(req.params.date));
+    res.json(await MeteoService.resumeVocal(req.params.date, req.query.lieu, req.query.lang));
   }),
 
   icones: wrap(async (req, res) => {
@@ -41,7 +39,8 @@ const MeteoController = {
   actualiser: wrap(async (req, res) => {
     res.json(await MeteoService.actualiser(
       req.body ? req.body.latitude : null,
-      req.body ? req.body.longitude : null
+      req.body ? req.body.longitude : null,
+      req.body ? req.body.lieu : null
     ));
   }),
 };

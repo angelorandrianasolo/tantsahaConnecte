@@ -8,7 +8,7 @@ const ObservationModel = require('../models/observation.model');
 const DashboardService = {
   obtenir: async () => {
     const [meteo, alertes, derniereObs, totalParcelles] = await Promise.all([
-      MeteoModel.findProchainsJours(3),          // bandeau météo
+      MeteoModel.findProchainsJours(3, require('./meteo.service').LIEU_DEFAUT), // bandeau météo
       AlerteModel.findNonLues(),                 // badge d'alertes
       pool.query(
         `SELECT o.id, o.type, TO_CHAR(o.date_obs, 'YYYY-MM-DD') AS date_obs, o.valeur, p.nom AS parcelle

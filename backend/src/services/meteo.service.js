@@ -1,8 +1,9 @@
 const MeteoModel = require('../models/meteo.model');
+const pool = require('../config/db');
+const https = require('https');
 
 // Icônes en malagasy
 const ICONE_VALIDE = ['masoandro', 'mandravona', 'orana', 'oram-baratra', 'varatra', 'rivotra'];
-
 // Libellés malagasy (anciennes valeurs acceptées par compatibilité)
 const ICONE_LABELS = {
   masoandro: 'Masoandro',   // soleil
@@ -25,16 +26,27 @@ const SEUIL_PROBA_PLUIE_FAVORABLE = 70; // % → orana suffisante pour le semis
 
 const MeteoService = {
   ICONES: ICONE_VALIDE,
+  LIEU_DEFAUT: 'Antsirabe',
 
-  lister: () => MeteoModel.findAll(),
+  // Libellés français de l'icône (site multilingue)
+  iconeFrancais: (code) => ({
+    masoandro: 'Soleil',
+    mandravona: 'Nuageux',
+    orana: 'Pluie',
+    'oram-baratra': 'Orage',
+    varatra: 'Foudre',
+    rivotra: 'Vent',
+  }[code] || code),
 
-  prochainsJours: (nb) => {
+  lister: (lieu) => MeteoModel.findAll(lieu),
+
+  prochainsJours: (nb, lieu) => {
     const n = Math.min(Math.max(Number(nb) || 3, 1), 7);
-    return MeteoModel.findProchainsJours(n);
+    return MeteoModel.findProchainsJours(n, lieu || MeteoService.LIEU_DEFAUT);
   },
 
-  obtenirParDate: async (date) => {
-    const m = await MeteoModel.findByDate(date);
+  obtenirParDate: async (date, lieu) => {
+    const m = await MeteoModel.findByDate(date, lieu || MeteoService.LIEU_DEFAUT);
     if (!m) throw { status: 404, message: "Tsy misy fotoana masoandro amin'ity andro ity" };
     return m;
   },
@@ -52,55 +64,68 @@ const MeteoService = {
 
   // --- Règles métier du modèle UML ---
 
-  estFavorableSemis: async (date) => {
-    const m = await MeteoModel.findByDate(date);
+  estFavorableSemis: async (date, lieu) => {
+    const m = await MeteoModel.findByDate(date, lieu || MeteoService.LIEU_DEFAUT);
     if (!m) throw { status: 404, message: "Tsy misy fotoana masoandro amin'ity andro ity" };
     return { ...m, favorableSemis: MeteoService.estFavorable(m) };
   },
 
-  // Version vocale malagasy (prête à être lue à voix haute)
-  resumeVocal: async (date) => {
-    const m = await MeteoModel.findByDate(date);
+  // Version vocale bilingue (prête à être lue à voix haute) — ?lang=mg|fr
+  resumeVocal: async (date, lieu, langue) => {
+    const m = await MeteoModel.findByDate(date, lieu || MeteoService.LIEU_DEFAUT);
     if (!m) throw { status: 404, message: "Tsy misy fotoana masoandro amin'ity andro ity" };
     const favorable = MeteoService.estFavorable(m);
-    const icone = ICONE_LABELS[m.icone] || m.icone;
-    return {
-      date: m.date_prev,
-      resume:
-        `${icone}. Orana ${m.proba_pluie} kalitiana. ` +
-        `${Math.round(m.temp_min)} hatramin'ny ${Math.round(m.temp_max)} digera Celsius. ` +
+    const fr = String(langue || '').toLowerCase().startsWith('fr');
+    const min = Math.round(m.temp_min);
+    const max = Math.round(m.temp_max);
+
+    const resume = fr
+      ? `À ${m.lieu} : ${MeteoService.iconeFrancais(m.icone)}. Pluie à ${m.proba_pluie} %. ` +
+        `De ${min} à ${max} degrés Celsius. ` +
+        (favorable ? 'Favorable pour semer.' : 'Pas favorable pour semer.')
+      : `Amin'ny ${m.lieu}: ${ICONE_LABELS[m.icone] || m.icone}. Orana ${m.proba_pluie} kalitiana. ` +
+        `${min} hatramin'ny ${max} digera Celsius. ` +
         (favorable
           ? 'Mety hamono ny hatsy ity andro ity.'
-          : 'Tsy mety hamono ny hatsy ity andro ity.'),
+          : 'Tsy mety hamono ny hatsy ity andro ity.');
+
+    return {
+      date: m.date_prev,
+      lieu: m.lieu,
+      langue: fr ? 'fr' : 'mg',
+      resume,
       favorableSemis: favorable,
     };
   },
 
   // --- Actualisation depuis Open-Meteo (source réelle, gratuite, sans clé) ---
   // Le serveur va chercher la météo : le téléphone, lui, reste hors ligne.
-  actualiser: async (latitude, longitude) => {
+  actualiser: async (latitude, longitude, lieu) => {
     const lat = Number(latitude) || -19.8583;   // Antsirabe par défaut
     const lon = Number(longitude) || 47.5567;
+    const estDefaut = !latitude && !longitude;
+    const label = lieu || (estDefaut ? 'Antsirabe' : `${lat},${lon}`);
     const url =
       'https://api.open-meteo.com/v1/forecast' +
       `?latitude=${lat}&longitude=${lon}` +
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
       '&timezone=auto&forecast_days=7';
 
-    const ctrl = new AbortController();
-    const minuteur = setTimeout(() => ctrl.abort(), 20000);   // 20 s max (open-meteo peut être lent)
-
-    let r;
+    // Requête robuste (2 tentatives) : le réseau malgache est parfois lent
+    let brut;
     try {
-      r = await fetch(url, { signal: ctrl.signal });
-    } catch {
-      throw { status: 503, message: 'Tsy afaka mijery ny masoandro ankehitriny' }; // hors ligne : on garde l'ancien cache
-    } finally {
-      clearTimeout(minuteur);
+      brut = await MeteoService._requeter(url);
+    } catch (e) {
+      // hors ligne : on garde l'ancien cache
+      throw e.status ? e : { status: 503, message: 'Tsy afaka mijery ny masoandro ankehitriny' };
     }
-    if (!r.ok) throw { status: 502, message: 'Tsy mety ny tanterahan-dalana masoandro' };
 
-    const d = await r.json();
+    let d;
+    try {
+      d = JSON.parse(brut);
+    } catch {
+      throw { status: 502, message: 'Format tsy eo anilan-dalana' };
+    }
     const daily = d && d.daily;
     if (!daily || !daily.time) {
       throw { status: 502, message: 'Format tsy eo anilan-dalana' };
@@ -114,16 +139,84 @@ const MeteoService = {
         proba_pluie: daily.precipitation_probability_max[i] ?? 0,
         temp_min: daily.temperature_2m_min[i],
         temp_max: daily.temperature_2m_max[i],
+        lieu: label,
       });
       enregistrees++;
     }
 
     return {
-      lieux: `${lat}, ${lon}`,
+      lieu: label,
       miseAJour: enregistrees,
       source: 'open-meteo',
       horodatage: new Date().toISOString(),
     };
+  },
+
+  // --- Requête HTTPS sortante : IPv4 + timeout + 2 tentatives ---
+  // (l'IPv6 et le réseau capricieux font échouer fetch() ici)
+  _essaiHTTPS: (url) => new Promise((resolve, reject) => {
+    let fini = false;
+    const req = https.get(url, { family: 4, timeout: 25000 }, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        res.resume();
+        fini = true;
+        return reject({ status: 502, message: 'Tsy mety ny tanterahan-dalana masoandro' });
+      }
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', (c) => (data += c));
+      res.on('end', () => { if (!fini) { fini = true; resolve(data); } });
+    });
+    req.on('timeout', () => req.destroy(new Error('lany andro')));
+    req.on('error', () => {
+      if (!fini) { fini = true; reject({ status: 503, message: 'Tsy afaka mijery ny masoandro ankehitriny' }); }
+    });
+  }),
+
+  _requeter: async (url) => {
+    let dernier = null;
+    for (let tentative = 0; tentative < 2; tentative++) {
+      try {
+        return await MeteoService._essaiHTTPS(url);
+      } catch (e) {
+        dernier = e;
+        if (tentative === 0) await new Promise((r) => setTimeout(r, 1500));
+      }
+    }
+    throw dernier;
+  },
+
+  // --- Actualisation de TOUTES les régions des utilisateurs ---
+  actualiserTous: async () => {
+    const { rows } = await pool.query(
+      `SELECT DISTINCT region, latitude, longitude
+       FROM utilisateurs
+       WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+       ORDER BY region
+       LIMIT 5`
+    );
+
+    // aucun lieu déclaré -> Antsirabe par défaut
+    if (!rows.length) {
+      const r = await MeteoService.actualiser();
+      return { lieux: 1, jours: r.miseAJour, source: r.source, horodatage: r.horodatage };
+    }
+
+    let jours = 0;
+    let lieux = 0;
+    for (const l of rows) {
+      try {
+        const r = await MeteoService.actualiser(
+          l.latitude, l.longitude,
+          l.region || `${l.latitude},${l.longitude}`
+        );
+        jours += r.miseAJour;
+        lieux++;
+      } catch {
+        // région injoignable : on garde son ancien cache (jamais de perte)
+      }
+    }
+    return { lieux, jours, source: 'open-meteo', horodatage: new Date().toISOString() };
   },
 
   // Codes WMO -> icônes malagasy

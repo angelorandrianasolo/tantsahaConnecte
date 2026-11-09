@@ -3,6 +3,7 @@ const router = express.Router();
 const AlerteController = require('../controllers/alerte.controller');
 
 router.get('/meta', AlerteController.metadonnees);    // avant /:id
+router.post('/actualisation', AlerteController.actualisation); // alertes auto
 router.get('/non-lues', AlerteController.listerNonLues);
 router.get('/', AlerteController.lister);
 router.get('/:id', AlerteController.obtenir);
