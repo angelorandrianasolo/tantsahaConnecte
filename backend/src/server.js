@@ -14,6 +14,20 @@ app.use(express.json({ limit: '2mb' }));   // photos en base64 acceptées
 app.use(require('./middlewares/limit').limitateur);
 app.use(require('./middlewares/session').optionnel);   // req.utilisateur si token valide
 
+// --- Frontend web compilé (Vite -> frontend/dist) ---
+// Deux comportements distincts :
+//   * le navigateur demande une page (Accept: text/html)  -> sert l'app React (SPA)
+//   * AJAX / API (Accept: */*)                           -> routes JSON ci-dessous
+const dossierFrontend = path.join(__dirname, '..', '..', 'frontend', 'dist');
+if (fs.existsSync(dossierFrontend)) {
+  app.use(express.static(dossierFrontend));            // /assets/*.js, css, favicon
+  app.use((req, res, next) => {
+    const navigateur = (req.get('Accept') || '').includes('text/html');
+    if (req.method !== 'GET' || !navigateur) return next();
+    res.sendFile(path.join(dossierFrontend, 'index.html'));   // routage côté React
+  });
+}
+
 // --- Routes MVC ---
 app.get('/health', async (req, res) => {
   // vérifie aussi la base : ok seulement si PostgreSQL répond
@@ -36,11 +50,7 @@ app.use('/sync', require('./routes/sync.routes'));
 app.use('/dashboard', require('./routes/dashboard.routes'));
 app.use('/audio', require('./routes/audio.routes'));
 
-// Frontend statique (sert le dossier s'il existe — pour plus tard)
-const dossierFrontend = path.join(__dirname, '..', '..', 'frontend');
-if (fs.existsSync(dossierFrontend)) {
-  app.use(express.static(dossierFrontend));
-}
+// Frontend : voir le bloc « Frontend web compilé » plus haut (avant les routes)
 
 // 404
 const { traduire } = require('./i18n');
