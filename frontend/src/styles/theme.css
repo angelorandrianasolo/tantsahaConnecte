@@ -157,3 +157,105 @@ button.voix {
 
 .chargement { text-align: center; padding: 40px; color: var(--texte-pale); }
 .erreur { color: var(--rouge); font-weight: 700; padding: 12px; }
+
+/* ---------- Bandeau : actions ---------- */
+.etat-gauche { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.badge-file {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 14px;
+  margin-left: 10px;
+}
+.choix-langue { display: flex; gap: 6px; }
+.choix-langue button {
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.choix-langue button.actif { background: #fff; color: var(--texte); border-color: #fff; }
+
+/* ---------- Accessibilité / ergonomie (étape 11) ---------- */
+:focus-visible {
+  outline: 4px solid var(--jaune);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+button, a, input, select, textarea { font-size: 17px; }
+select, input, textarea {
+  padding: 12px;
+  border: 2px solid var(--bord);
+  border-radius: 10px;
+  background: #fff;
+  width: 100%;
+}
+label { font-weight: 700; display: block; margin: 10px 0 4px; }
+
+/* ---------- Formulaires ---------- */
+.formulaire { display: grid; gap: 4px; }
+.ligne-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.ligne-form > div { flex: 1; min-width: 160px; }
+
+/* ---------- Filtres (chips) ---------- */
+.filtres { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 var(--gap); margin-bottom: 6px; }
+.filtres button {
+  border: 2px solid var(--bord);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.filtres button.actif { background: var(--vert); border-color: var(--vert); color: #fff; }
+
+/* ---------- Cartes-jours (météo) ---------- */
+.carte.jour-rouge { border-left: 10px solid var(--rouge); }
+.carte.jour-vert { border-left: 10px solid var(--vert); }
+.carte.jour-jaune { border-left: 10px solid var(--jaune); }
+.jour-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.jour-icone { font-size: 44px; }
+.temps { display: flex; gap: 14px; font-weight: 700; margin-top: 6px; }
+.barre-pluie { height: 10px; background: var(--bord); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+.barre-pluie > i { display: block; height: 100%; background: var(--rouge); }
+
+/* ---------- Listes ---------- */
+.liste-vide { text-align: center; padding: 36px 16px; color: var(--texte-pale); font-weight: 700; }
+.meta-ligne { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--texte-pale); font-size: 15px; margin-top: 6px; }
+.puce { background: var(--fond); border: 1px solid var(--bord); border-radius: 999px; padding: 2px 10px; font-size: 14px; font-weight: 700; }
+.actions-carte { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.mini-bouton {
+  border: none; border-radius: 10px; padding: 10px 14px;
+  font-weight: 800; cursor: pointer; background: var(--fond); color: var(--texte);
+  border: 2px solid var(--bord);
+}
+.mini-bouton.vert { background: var(--vert); color: #fff; border-color: var(--vert); }
+.mini-bouton.rouge { background: var(--rouge); color: #fff; border-color: var(--rouge); }
+.mini-bouton.jaune { background: var(--jaune); color: #3a2c00; border-color: var(--jaune); }
+
+/* Bouton voix rond */
+button.voix { flex-shrink: 0; }
+
+/* Vignette photo */
+.photo-vignette { max-width: 100%; border-radius: 10px; margin-top: 10px; border: 2px solid var(--bord); }
+
+/* Compteurs du tableau de bord */
+.grille-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--gap); padding: 0 var(--gap); }
+.stat { text-align: center; padding: 18px 8px; }
+.stat .valeur { font-size: 40px; font-weight: 800; }
+.stat.rouge .valeur { color: var(--rouge); }
+.stat.vert .valeur { color: var(--vert); }
+.stat.jaune .valeur { color: var(--jaune-fonce); }
+.stat .libelle { font-weight: 700; color: var(--texte-pale); }

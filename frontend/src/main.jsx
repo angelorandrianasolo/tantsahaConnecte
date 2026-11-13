@@ -11,3 +11,10 @@ ReactDOM.createRoot(document.getElementById('racine')).render(
     </BrowserRouter>
   </React.StrictMode>,
 );
+
+/* PWA : l'app reste utilisable hors ligne (étape 9) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}

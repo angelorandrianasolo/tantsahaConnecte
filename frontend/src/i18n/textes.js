@@ -1,9 +1,12 @@
 /* Textes de l'INTERFACE (pas les données) — malagasy par défaut, français en option.
-   Accès : t('accueil.titre')  ->  "Fandraisana" ; avec langue='fr' -> "Accueil" */
+   Accès : t('accueil.titre')  ->  "Fandraisana" ; avec langue='fr' -> "Accueil"
+   Les variables {n}, {nom} sont remplacées par .replace('{n}', valeur) */
 
 export const textes = {
   mg: {
     'app.nom': 'Tantsaha Connect',
+
+    // Accueil
     'accueil.titre': 'Fandraisana',
     'accueil.meteo': 'Voipetra masoandro',
     'accueil.alertes': 'Fampitandremana',
@@ -11,17 +14,127 @@ export const textes = {
     'accueil.conseils': 'Torolalana',
     'accueil.parcelles': 'Tanimbary',
     'accueil.tableau': 'Topimbaratra',
+    'accueil.salama': 'Salama, {nom} !',
+    'accueil.langue': 'Fiteny',
+
+    // État du réseau
     'etat.enLigne': 'Mifandray',
     'etat.horsLigne': 'Tsy mifandray',
     'etat.aEnvoyer': 'tokony halefa',
-    'retour': 'Hiverina',
-    'connexion.titre': 'Ianao no mampiasa?',
-    'connexion.kirakira': 'Misokatra',
-    'chargement': 'Mametraka...',
+    'etat.fileN': '{n} alefa',
+    'erreur.reseau': 'Tsy misy internet',
     'erreur': 'Tsy fahazotoana',
+    'reessayer': 'Hanovaova',
+    'chargement': 'Mametraka...',
+    'retour': 'Hiverina',
+    'annuler': 'Hanao',
+    'hamafy': 'Hamafy',
+    'sufa': 'Hofafana',
+    'sufa.confirm': 'Hofafana tokoa ?',
+    'ok': 'Eny',
+
+    // Connexion
+    'connexion.titre': 'Ianao no mampiasa ?',
+    'connexion.anarana': 'Anarana',
+    'connexion.ouvrir': 'Misokatra',
+    'connexion.nouveau': 'Hampiditra olona vaovao',
+    'connexion.creer': 'Hampiditra',
+    'connexion.aucun': 'Tsy misy olona',
+    'session.fermer': 'Hivoaka',
+    'session.nonConnecte': 'Tsy mbola misokatra',
+
+    // Alertes
+    'alertes.titre': 'Fampitandremana',
+    'alertes.aucune': 'Tsy misy fampitandremana',
+    'alertes.lueToutes': 'Manarona daholo',
+    'alertes.marquerLue': 'Hamakita',
+    'alertes.actualiser': 'Hanovaova',
+    'alertes.filtreTout': 'Rehetra',
+    'alertes.filtreNonLues': 'Tsy vahina',
+    'alertes.filtreLues': 'Vahina',
+    'alertes.nonLues': 'Tsy vahina',
+
+    // Priorités et types
+    'priorite.URGENTE': 'Tena ilaina',
+    'priorite.NORMALE': 'Mandrifitra',
+    'type.METEO': 'Voipetra masoandro',
+    'type.SEMIS': 'Fambolena',
+    'type.RECOLTE': 'Famokarana',
+    'type.RAVAGEUR': 'Mpanala',
+    'type.PLUIE': 'Orana',
+    'type.PLANTATION': 'Fambolena',
+    'type.MALADIE': 'Tazo',
+
+    // Météo
+    'meteo.titre': 'Voipetra masoandro',
+    'meteo.aucune': 'Tsy misy fipetra',
+    'meteo.favorable': 'Mety hamono',
+    'meteo.pasFavorable': 'Tsy mety',
+    'meteo.proba': 'Orana',
+    'meteo.min': 'Ambany',
+    'meteo.max': 'Ambony',
+    'meteo.actualiser': 'Hanovaova',
+    'meteo.ajouter': 'Hanampy toerana',
+    'meteo.lieu': 'Toerana',
+    'meteo.resume': 'Hijery ny famintinana',
+    'meteo.nouvLieu': 'Mifarana toerana vaovao',
+    'meteo.go': 'Manao',
+    'meteo.legende': 'Sary ny havana',
+
+    // Parcelles
+    'parcelles.titre': 'Tanimbary',
+    'parcelles.nouveau': 'Tanimbary vaovao',
+    'parcelles.modifier': 'Hanova ny tanimbary',
+    'parcelles.anarana': 'Anarana',
+    'parcelles.culture': 'Karazana',
+    'parcelles.region': 'Faritra',
+    'parcelles.tompony': 'Tompony',
+    'parcelles.aucune': 'Tsy misy tanimbary',
+    'parcelles.choisir': 'Mifidiana...',
+    'parcelles.sansCulture': 'Tsy misy karazana',
+
+    // Journal (observations)
+    'journal.titre': 'Tatitra',
+    'journal.nouveau': 'Tatitra vaovao',
+    'journal.modifier': 'Hanova ny tatitra',
+    'journal.type': 'Karazana',
+    'journal.date': 'Daty',
+    'journal.valeur': 'Inona no nitranga ?',
+    'journal.photo': 'Sary',
+    'journal.photoAjouter': 'Soraty ny sary',
+    'journal.photoRetirer': 'Esorin ny sary',
+    'journal.photoGros': 'Loatra ny sary (amby 500 Ko)',
+    'journal.parcelle': 'Tanimbary',
+    'journal.aucune': 'Tsy misy tatitra',
+    'journal.choisirParcelle': 'Mifidiana tanimbary',
+    'journal.plantation': 'Fambolena',
+    'journal.recolte': 'Famokarana',
+
+    // Conseils
+    'conseils.titre': 'Torolalana',
+    'conseils.theme': 'Lohahevitra',
+    'conseils.tous': 'Rehetra',
+    'conseils.aucun': 'Tsy misy torolalana',
+    'conseils.ecouter': 'Hijery ny feo',
+
+    // Tableau de bord
+    'tableau.titre': 'Topimbaratra',
+    'tableau.alertes': 'Fampitandremana',
+    'tableau.derniere': 'Tatitra farany',
+    'tableau.nbParcelles': 'Tanimbary',
+    'tableau.urgentes': 'Tena ilaina',
+    'tableau.total': 'Total',
+    'tableau.resume': 'Hijery ny famintinana',
+    'tableau.pasObs': 'Tsy misy tatitra',
+    'tableau.meteo3': 'Andro 3 manaraka',
+
+    // Voix
+    'voix.btn': '🔊 Feo',
   },
+
   fr: {
     'app.nom': 'Tantsaha Connect',
+
     'accueil.titre': 'Accueil',
     'accueil.meteo': 'Météo',
     'accueil.alertes': 'Alertes',
@@ -29,16 +142,118 @@ export const textes = {
     'accueil.conseils': 'Conseils',
     'accueil.parcelles': 'Parcelles',
     'accueil.tableau': 'Tableau de bord',
+    'accueil.salama': 'Bonjour, {nom} !',
+    'accueil.langue': 'Langue',
+
     'etat.enLigne': 'En ligne',
     'etat.horsLigne': 'Hors ligne',
     'etat.aEnvoyer': 'à envoyer',
-    'retour': 'Retour',
-    'connexion.titre': 'Qui utilise l’app ?',
-    'connexion.kirakira': 'Se connecter',
-    'chargement': 'Chargement...',
+    'etat.fileN': '{n} à envoyer',
+    'erreur.reseau': 'Pas de connexion internet',
     'erreur': 'Erreur',
+    'reessayer': 'Réessayer',
+    'chargement': 'Chargement...',
+    'retour': 'Retour',
+    'annuler': 'Annuler',
+    'hamafy': 'Enregistrer',
+    'sufa': 'Supprimer',
+    'sufa.confirm': 'Supprimer vraiment ?',
+    'ok': 'Oui',
+
+    'connexion.titre': 'Qui utilise l’app ?',
+    'connexion.anarana': 'Nom',
+    'connexion.ouvrir': 'Se connecter',
+    'connexion.nouveau': 'Ajouter un utilisateur',
+    'connexion.creer': 'Ajouter',
+    'connexion.aucun': 'Aucun utilisateur',
+    'session.fermer': 'Se déconnecter',
+    'session.nonConnecte': 'Non connecté',
+
+    'alertes.titre': 'Alertes',
+    'alertes.aucune': 'Aucune alerte',
+    'alertes.lueToutes': 'Tout marquer lu',
+    'alertes.marquerLue': 'Marquer lu',
+    'alertes.actualiser': 'Actualiser',
+    'alertes.filtreTout': 'Toutes',
+    'alertes.filtreNonLues': 'Non lues',
+    'alertes.filtreLues': 'Lues',
+    'alertes.nonLues': 'non lues',
+
+    'priorite.URGENTE': 'Urgent',
+    'priorite.NORMALE': 'Normal',
+    'type.METEO': 'Météo',
+    'type.SEMIS': 'Semis',
+    'type.RECOLTE': 'Récolte',
+    'type.RAVAGEUR': 'Ravageur',
+    'type.PLUIE': 'Pluie',
+    'type.PLANTATION': 'Plantation',
+    'type.MALADIE': 'Maladie',
+
+    'meteo.titre': 'Météo',
+    'meteo.aucune': 'Aucune prévision',
+    'meteo.favorable': 'Favorable au semis',
+    'meteo.pasFavorable': 'Défavorable',
+    'meteo.proba': 'Pluie',
+    'meteo.min': 'Min',
+    'meteo.max': 'Max',
+    'meteo.actualiser': 'Actualiser',
+    'meteo.ajouter': 'Ajouter un lieu',
+    'meteo.lieu': 'Lieu',
+    'meteo.resume': 'Lire le résumé',
+    'meteo.nouvLieu': 'Nouveau lieu…',
+    'meteo.go': 'Aller',
+    'meteo.legende': 'Signification des icônes',
+
+    'parcelles.titre': 'Parcelles',
+    'parcelles.nouveau': 'Nouvelle parcelle',
+    'parcelles.modifier': 'Modifier la parcelle',
+    'parcelles.anarana': 'Nom',
+    'parcelles.culture': 'Culture',
+    'parcelles.region': 'Région',
+    'parcelles.tompony': 'Propriétaire',
+    'parcelles.aucune': 'Aucune parcelle',
+    'parcelles.choisir': 'Choisir...',
+    'parcelles.sansCulture': 'Sans culture',
+
+    'journal.titre': 'Journal',
+    'journal.nouveau': 'Nouvelle observation',
+    'journal.modifier': 'Modifier l’observation',
+    'journal.type': 'Type',
+    'journal.date': 'Date',
+    'journal.valeur': 'Que s’est-il passé ?',
+    'journal.photo': 'Photo',
+    'journal.photoAjouter': 'Prendre une photo',
+    'journal.photoRetirer': 'Retirer la photo',
+    'journal.photoGros': 'Image trop lourde (max 500 Ko)',
+    'journal.parcelle': 'Parcelle',
+    'journal.aucune': 'Aucune observation',
+    'journal.choisirParcelle': 'Choisir une parcelle',
+    'journal.plantation': 'Plantation',
+    'journal.recolte': 'Récolte',
+
+    'conseils.titre': 'Conseils',
+    'conseils.theme': 'Thème',
+    'conseils.tous': 'Tous',
+    'conseils.aucun': 'Aucun conseil',
+    'conseils.ecouter': 'Écouter',
+
+    'tableau.titre': 'Tableau de bord',
+    'tableau.alertes': 'Alertes',
+    'tableau.derniere': 'Dernière observation',
+    'tableau.nbParcelles': 'Parcelles',
+    'tableau.urgentes': 'Urgentes',
+    'tableau.total': 'Total',
+    'tableau.resume': 'Lire le résumé',
+    'tableau.pasObs': 'Aucune observation',
+    'tableau.meteo3': '3 jours à venir',
+
+    'voix.btn': '🔊 Voix',
   },
 };
 
 export const t = (cle, langue = 'mg') =>
   (textes[langue] && textes[langue][cle]) || textes.mg[cle] || cle;
+
+/* Remplace les variables : remplir(t('etat.fileN'), { n: 3 }) */
+export const remplir = (modele, vars) =>
+  Object.keys(vars).reduce((s, k) => s.replace(`{${k}}`, vars[k]), modele);
