@@ -30,8 +30,11 @@ cd frontend && npm install && npm run dev
 # 3b. Build web pour production (servi par le backend sur 3000)
 cd frontend && npm run build
 
-# 4. Mobile (Expo SDK 54)
-cd mobile && npm install && npx expo start
+# 4. Mobile (Expo SDK 54) — même app, même API
+cd mobile && npm install
+# indiquer l'URL du backend (IP de la machine sur le réseau local) :
+set EXPO_PUBLIC_API_URL=http://localhost:3000
+npx expo start
 ```
 
 ## 📖 Documentation
