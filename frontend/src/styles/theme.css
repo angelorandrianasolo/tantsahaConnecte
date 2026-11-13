@@ -1,0 +1,159 @@
+/* ============================================================
+   Thème Tantsaha Connect
+   Convention stricte du cahier des charges :
+     ROUGE  = danger / interdiction     (ex: orage, ravageur)
+     VERT   = favorable / encouragement (ex: météo de semis)
+     JAUNE  = prudence / attention
+   + Boutons géants : lisibles SANS texte (taille + icône + couleur)
+   ============================================================ */
+
+:root {
+  --rouge: #d32f2f;
+  --rouge-fonce: #b71c1c;
+  --vert: #2e7d32;
+  --vert-fonce: #1b5e20;
+  --jaune: #f9a825;
+  --jaune-fonce: #c17900;
+
+  --fond: #f6f1e7;          /* terre sèche */
+  --fond-carte: #ffffff;
+  --texte: #2b2b2b;
+  --texte-pale: #6d6d6d;
+  --bord: #e2d9c8;
+
+  --ombre: 0 4px 10px rgba(0, 0, 0, 0.12);
+  --rayon: 16px;
+  --gap: 14px;
+  --police: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #racine { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--police);
+  background: var(--fond);
+  color: var(--texte);
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Bandeau d'état ---------- */
+.bandeau-etat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+.bandeau-etat.en-ligne { background: var(--vert); }
+.bandeau-etat.hors-ligne { background: var(--rouge); }
+.bandeau-etat .pastille {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* ---------- Boutons géants ---------- */
+.bouton-geant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 150px;
+  padding: 18px;
+  border: none;
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  color: var(--texte);
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--police);
+  box-shadow: var(--ombre);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.08s ease;
+}
+.bouton-geant:active { transform: scale(0.97); }
+.bouton-geant .icone { font-size: 56px; line-height: 1; }
+.bouton-geant.vert { background: var(--vert); color: #fff; }
+.bouton-geant.rouge { background: var(--rouge); color: #fff; }
+.bouton-geant.jaune { background: var(--jaune); color: #3a2c00; }
+
+.grille-boutons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--gap);
+  padding: var(--gap);
+}
+
+/* ---------- Cartes ---------- */
+.carte {
+  background: var(--fond-carte);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 16px;
+  margin: var(--gap);
+}
+.carte.rouge { border-left: 10px solid var(--rouge); }
+.carte.vert { border-left: 10px solid var(--vert); }
+.carte.jaune { border-left: 10px solid var(--jaune); }
+
+/* ---------- En-tête de page ---------- */
+.tete-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 6px;
+}
+.tete-page h1 { margin: 0; font-size: 26px; }
+.lien-retour {
+  background: none; border: none;
+  font-size: 18px; font-weight: 700;
+  color: var(--vert); cursor: pointer;
+  font-family: var(--police);
+}
+
+/* ---------- Divers ---------- */
+button.action {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--police);
+  cursor: pointer;
+  background: var(--vert);
+  color: #fff;
+}
+button.action.rouge { background: var(--rouge); }
+button.action.jaune { background: var(--jaune); color: #3a2c00; }
+button.voix {
+  font-size: 26px;
+  background: var(--fond);
+  border: 2px solid var(--bord);
+  border-radius: 50%;
+  width: 60px; height: 60px;
+  cursor: pointer;
+}
+
+.badge {
+  background: var(--rouge);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 9px;
+}
+.badge[hidden] { display: none; }
+
+.chargement { text-align: center; padding: 40px; color: var(--texte-pale); }
+.erreur { color: var(--rouge); font-weight: 700; padding: 12px; }
